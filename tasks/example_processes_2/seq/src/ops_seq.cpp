@@ -6,7 +6,7 @@
 #include "example_processes_2/common/include/common.hpp"
 #include "util/include/util.hpp"
 
-namespace nesterov_a_test_task_processes_2 {
+namespace nesterov_a_test_task_processes {
 
 NesterovATestTaskSEQ::NesterovATestTaskSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
@@ -57,4 +57,4 @@ bool NesterovATestTaskSEQ::PostProcessingImpl() {
   return GetOutput() > 0;
 }
 
-}  // namespace nesterov_a_test_task_processes_2
+}  // namespace nesterov_a_test_task_processes

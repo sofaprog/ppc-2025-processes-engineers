@@ -1,0 +1,1 @@
+﻿Sentence with ellipsis... and then continues! What about multiple??? Or !!! marks.
