@@ -11,7 +11,7 @@ SentencesCounterSEQ::SentencesCounterSEQ(const InType &in) {
 }
 
 bool SentencesCounterSEQ::ValidationImpl() {
-  return (!GetInput().empty()) && (GetOutput() == 0);
+  return (GetOutput() == 0);
 }
 
 bool SentencesCounterSEQ::PreProcessingImpl() {

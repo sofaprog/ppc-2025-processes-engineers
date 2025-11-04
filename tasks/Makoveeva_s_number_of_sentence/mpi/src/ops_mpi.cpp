@@ -12,7 +12,7 @@ SentencesCounterMPI::SentencesCounterMPI(const InType &in) {
 }
 
 bool SentencesCounterMPI::ValidationImpl() {
-  return (!GetInput().empty()) && (GetOutput() == 0);
+  return (GetOutput() == 0);
 }
 
 bool SentencesCounterMPI::PreProcessingImpl() {

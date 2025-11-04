@@ -7,10 +7,9 @@
 
 namespace makoveeva_s_number_of_sentence {
 
-// Функциональные тесты для sequential версии
+// Простые функциональные тесты
 TEST(makoveeva_s_number_of_sentence, seq_empty_text) {
     auto task = SentencesCounterSEQ("");
-    // Используем публичные методы вместо Impl
     EXPECT_TRUE(task.validation());
     EXPECT_TRUE(task.pre_processing());
     EXPECT_TRUE(task.run());
@@ -36,13 +35,23 @@ TEST(makoveeva_s_number_of_sentence, seq_multiple_sentences) {
     EXPECT_EQ(task.GetOutput(), 3);
 }
 
-// Базовый тест для MPI
-TEST(makoveeva_s_number_of_sentence, mpi_basic_test) {
-    auto task = SentencesCounterMPI("Test sentence.");
+TEST(makoveeva_s_number_of_sentence, seq_no_sentences) {
+    auto task = SentencesCounterSEQ("Just text without sentence endings");
     EXPECT_TRUE(task.validation());
     EXPECT_TRUE(task.pre_processing());
     EXPECT_TRUE(task.run());
     EXPECT_TRUE(task.post_processing());
+    EXPECT_EQ(task.GetOutput(), 0);
+}
+
+// MPI тесты (будут работать только через mpiexec)
+TEST(makoveeva_s_number_of_sentence, mpi_basic_test) {
+    auto task = SentencesCounterMPI("Test sentence. Another one!");
+    EXPECT_TRUE(task.validation());
+    EXPECT_TRUE(task.pre_processing());
+    EXPECT_TRUE(task.run());
+    EXPECT_TRUE(task.post_processing());
+    // Для MPI проверяем что результат не отрицательный
     EXPECT_TRUE(task.GetOutput() >= 0);
 }
 

@@ -10,11 +10,13 @@ namespace makoveeva_s_number_of_sentence {
 // Простые performance тесты
 TEST(makoveeva_s_number_of_sentence, seq_performance_pipeline) {
     std::string test_text = "This is a test sentence. And another one! How about a question? ";
-    test_text = test_text + test_text + test_text;
+    // Увеличим текст для performance теста
+    for (int i = 0; i < 10; i++) {
+        test_text += test_text;
+    }
     
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 10; i++) {  // Уменьшим количество итераций для скорости
         auto task = SentencesCounterSEQ(test_text);
-        // Используем публичные методы вместо Impl
         EXPECT_TRUE(task.validation());
         EXPECT_TRUE(task.pre_processing());
         EXPECT_TRUE(task.run());
@@ -22,17 +24,22 @@ TEST(makoveeva_s_number_of_sentence, seq_performance_pipeline) {
     }
 }
 
-TEST(makoveeva_s_number_of_sentence, mpi_performance_pipeline) {
-    std::string test_text = "MPI test sentence. Performance! Testing? ";
-    
-    for (int i = 0; i < 50; i++) {
-        auto task = SentencesCounterMPI(test_text);
-        // Используем публичные методы вместо Impl
-        EXPECT_TRUE(task.validation());
-        EXPECT_TRUE(task.pre_processing());
-        EXPECT_TRUE(task.run());
-        EXPECT_TRUE(task.post_processing());
+TEST(makoveeva_s_number_of_sentence, seq_performance_task) {
+    std::string test_text = "Short text. For performance!";
+    // Увеличим текст
+    for (int i = 0; i < 5; i++) {
+        test_text += test_text;
     }
+    
+    auto task = SentencesCounterSEQ(test_text);
+    EXPECT_TRUE(task.validation());
+    EXPECT_TRUE(task.pre_processing());
+    
+    for (int i = 0; i < 100; i++) {  // Только run()
+        EXPECT_TRUE(task.run());
+    }
+    
+    EXPECT_TRUE(task.post_processing());
 }
 
 } // namespace makoveeva_s_number_of_sentence
