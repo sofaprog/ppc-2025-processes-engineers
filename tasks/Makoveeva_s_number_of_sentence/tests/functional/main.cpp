@@ -1,15 +1,14 @@
 #include <gtest/gtest.h>
-#include <fstream>
 #include <string>
 
-#include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
-#include "Makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
-#include "Makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
+#include "makoveeva_s_number_of_sentence/common/include/common.hpp"
+#include "makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
+#include "makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
 
-namespace Makoveeva_s_number_of_sentence {
+namespace makoveeva_s_number_of_sentence {
 
 // Функциональные тесты для sequential версии
-TEST(makoveeva_s_number_of_sentence_seq, empty_text) {
+TEST(makoveeva_s_number_of_sentence, seq_empty_text) {
     auto task = SentencesCounterSEQ("");
     // Используем публичные методы вместо Impl
     EXPECT_TRUE(task.validation());
@@ -19,7 +18,7 @@ TEST(makoveeva_s_number_of_sentence_seq, empty_text) {
     EXPECT_EQ(task.GetOutput(), 0);
 }
 
-TEST(makoveeva_s_number_of_sentence_seq, single_sentence) {
+TEST(makoveeva_s_number_of_sentence, seq_single_sentence) {
     auto task = SentencesCounterSEQ("Hello world.");
     EXPECT_TRUE(task.validation());
     EXPECT_TRUE(task.pre_processing());
@@ -28,7 +27,7 @@ TEST(makoveeva_s_number_of_sentence_seq, single_sentence) {
     EXPECT_EQ(task.GetOutput(), 1);
 }
 
-TEST(makoveeva_s_number_of_sentence_seq, multiple_sentences) {
+TEST(makoveeva_s_number_of_sentence, seq_multiple_sentences) {
     auto task = SentencesCounterSEQ("First! Second? Third.");
     EXPECT_TRUE(task.validation());
     EXPECT_TRUE(task.pre_processing());
@@ -37,8 +36,8 @@ TEST(makoveeva_s_number_of_sentence_seq, multiple_sentences) {
     EXPECT_EQ(task.GetOutput(), 3);
 }
 
-// Функциональные тесты для MPI версии
-TEST(makoveeva_s_number_of_sentence_mpi, basic_test) {
+// Базовый тест для MPI
+TEST(makoveeva_s_number_of_sentence, mpi_basic_test) {
     auto task = SentencesCounterMPI("Test sentence.");
     EXPECT_TRUE(task.validation());
     EXPECT_TRUE(task.pre_processing());
@@ -47,4 +46,4 @@ TEST(makoveeva_s_number_of_sentence_mpi, basic_test) {
     EXPECT_TRUE(task.GetOutput() >= 0);
 }
 
-} // namespace Makoveeva_s_number_of_sentence
+} // namespace makoveeva_s_number_of_sentence

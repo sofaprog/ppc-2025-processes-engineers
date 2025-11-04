@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
+#include "makoveeva_s_number_of_sentence/common/include/common.hpp"
 #include "task/include/task.hpp"
 
-namespace Makoveeva_s_number_of_sentence {
+namespace makoveeva_s_number_of_sentence {
 
 class SentencesCounterSEQ : public BaseTask {
  public:
@@ -12,6 +12,12 @@ class SentencesCounterSEQ : public BaseTask {
   }
   explicit SentencesCounterSEQ(const InType &in);
 
+  // ДОБАВИТЬ публичные методы для тестов
+  bool validation() { return ValidationImpl(); }
+  bool pre_processing() { return PreProcessingImpl(); }
+  bool run() { return RunImpl(); }
+  bool post_processing() { return PostProcessingImpl(); }
+
  private:
   bool ValidationImpl() override;
   bool PreProcessingImpl() override;
@@ -19,4 +25,4 @@ class SentencesCounterSEQ : public BaseTask {
   bool PostProcessingImpl() override;
 };
 
-}  // namespace Makoveeva_s_number_of_sentence
+}  // namespace makoveeva_s_number_of_sentence

@@ -1,8 +1,8 @@
-#include "Makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
+#include "makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
 
 #include <string>
 
-namespace Makoveeva_s_number_of_sentence {
+namespace makoveeva_s_number_of_sentence {
 
 SentencesCounterSEQ::SentencesCounterSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
@@ -11,17 +11,14 @@ SentencesCounterSEQ::SentencesCounterSEQ(const InType &in) {
 }
 
 bool SentencesCounterSEQ::ValidationImpl() {
-  // Проверяем что входная строка не пустая и выход = 0
   return (!GetInput().empty()) && (GetOutput() == 0);
 }
 
 bool SentencesCounterSEQ::PreProcessingImpl() {
-  // Инициализация - можно пропустить или подготовить данные
   return true;
 }
 
 bool SentencesCounterSEQ::RunImpl() {
-  // ОСНОВНОЙ АЛГОРИТМ ПОДСЧЕТА ПРЕДЛОЖЕНИЙ
   const std::string& text = GetInput();
   std::size_t sentence_count = 0;
   
@@ -36,8 +33,7 @@ bool SentencesCounterSEQ::RunImpl() {
 }
 
 bool SentencesCounterSEQ::PostProcessingImpl() {
-  // Пост-обработка не нужна для этой задачи
   return true;
 }
 
-}  // namespace Makoveeva_s_number_of_sentence
+}  // namespace makoveeva_s_number_of_sentence
