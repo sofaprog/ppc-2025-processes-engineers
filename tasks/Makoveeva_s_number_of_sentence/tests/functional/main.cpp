@@ -14,7 +14,7 @@ TEST(makoveeva_s_number_of_sentence, seq_empty_text) {
   EXPECT_TRUE(task.pre_processing());
   EXPECT_TRUE(task.run());
   EXPECT_TRUE(task.post_processing());
-  EXPECT_EQ(task.GetOutput(), 0);
+  EXPECT_EQ(task.GetOutput(), 0UL);  // ← исправлено
 }
 
 TEST(makoveeva_s_number_of_sentence, seq_single_sentence) {
@@ -23,7 +23,7 @@ TEST(makoveeva_s_number_of_sentence, seq_single_sentence) {
   EXPECT_TRUE(task.pre_processing());
   EXPECT_TRUE(task.run());
   EXPECT_TRUE(task.post_processing());
-  EXPECT_EQ(task.GetOutput(), 1);
+  EXPECT_EQ(task.GetOutput(), 1UL);  // ← исправлено
 }
 
 TEST(makoveeva_s_number_of_sentence, seq_multiple_sentences) {
@@ -32,7 +32,7 @@ TEST(makoveeva_s_number_of_sentence, seq_multiple_sentences) {
   EXPECT_TRUE(task.pre_processing());
   EXPECT_TRUE(task.run());
   EXPECT_TRUE(task.post_processing());
-  EXPECT_EQ(task.GetOutput(), 3);
+  EXPECT_EQ(task.GetOutput(), 3UL);  // ← исправлено
 }
 
 TEST(makoveeva_s_number_of_sentence, seq_no_sentences) {
@@ -41,7 +41,7 @@ TEST(makoveeva_s_number_of_sentence, seq_no_sentences) {
   EXPECT_TRUE(task.pre_processing());
   EXPECT_TRUE(task.run());
   EXPECT_TRUE(task.post_processing());
-  EXPECT_EQ(task.GetOutput(), 0);
+  EXPECT_EQ(task.GetOutput(), 0UL);  // ← исправлено
 }
 
 TEST(makoveeva_s_number_of_sentence, mpi_basic_test) {
@@ -50,7 +50,7 @@ TEST(makoveeva_s_number_of_sentence, mpi_basic_test) {
   EXPECT_TRUE(task.pre_processing());
   EXPECT_TRUE(task.run());
   EXPECT_TRUE(task.post_processing());
-  EXPECT_TRUE(task.GetOutput() >= 0);
+  EXPECT_TRUE(task.GetOutput() >= 0UL);  // ← исправлено
 }
 
 }  // namespace makoveeva_s_number_of_sentence

@@ -8,7 +8,6 @@
 
 namespace makoveeva_s_number_of_sentence {
 
-// Простые performance тесты
 TEST(makoveeva_s_number_of_sentence, seq_performance_pipeline) {
   std::string test_text = "This is a test sentence. And another one! How about a question? ";
   // Увеличим текст для performance теста
@@ -16,7 +15,7 @@ TEST(makoveeva_s_number_of_sentence, seq_performance_pipeline) {
     test_text += test_text;
   }
 
-  for (int i = 0; i < 10; i++) {  // Уменьшим количество итераций для скорости
+  for (int i = 0; i < 10; i++) {
     auto task = SentencesCounterSEQ(test_text);
     EXPECT_TRUE(task.validation());
     EXPECT_TRUE(task.pre_processing());
@@ -36,7 +35,7 @@ TEST(makoveeva_s_number_of_sentence, seq_performance_task) {
   EXPECT_TRUE(task.validation());
   EXPECT_TRUE(task.pre_processing());
 
-  for (int i = 0; i < 100; i++) {  // Только run()
+  for (int i = 0; i < 100; i++) {
     EXPECT_TRUE(task.run());
   }
 
