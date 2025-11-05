@@ -1,4 +1,4 @@
-#include "makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
+#include "Makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
 
 #include <string>
 
