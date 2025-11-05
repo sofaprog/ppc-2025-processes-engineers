@@ -19,15 +19,15 @@ bool SentencesCounterSEQ::PreProcessingImpl() {
 }
 
 bool SentencesCounterSEQ::RunImpl() {
-  const std::string& text = GetInput();
+  const std::string &text = GetInput();
   std::size_t sentence_count = 0;
-  
+
   for (char c : text) {
     if (c == '.' || c == '!' || c == '?') {
       sentence_count++;
     }
   }
-  
+
   GetOutput() = sentence_count;
   return true;
 }
