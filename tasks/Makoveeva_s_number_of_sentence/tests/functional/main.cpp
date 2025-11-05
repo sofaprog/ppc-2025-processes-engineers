@@ -7,7 +7,6 @@
 
 namespace makoveeva_s_number_of_sentence {
 
-// Простые функциональные тесты
 TEST(makoveeva_s_number_of_sentence, seq_empty_text) {
     auto task = SentencesCounterSEQ("");
     EXPECT_TRUE(task.validation());
@@ -44,14 +43,12 @@ TEST(makoveeva_s_number_of_sentence, seq_no_sentences) {
     EXPECT_EQ(task.GetOutput(), 0);
 }
 
-// MPI тесты (будут работать только через mpiexec)
 TEST(makoveeva_s_number_of_sentence, mpi_basic_test) {
     auto task = SentencesCounterMPI("Test sentence. Another one!");
     EXPECT_TRUE(task.validation());
     EXPECT_TRUE(task.pre_processing());
     EXPECT_TRUE(task.run());
     EXPECT_TRUE(task.post_processing());
-    // Для MPI проверяем что результат не отрицательный
     EXPECT_TRUE(task.GetOutput() >= 0);
 }
 

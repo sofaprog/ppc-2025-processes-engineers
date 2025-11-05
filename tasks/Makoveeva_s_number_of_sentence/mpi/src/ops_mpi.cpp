@@ -27,12 +27,10 @@ bool SentencesCounterMPI::RunImpl() {
   const std::string& text = GetInput();
   std::size_t text_length = text.length();
   
-  // Разделяем текст между процессами
   std::size_t chunk_size = text_length / size;
   std::size_t start = rank * chunk_size;
   std::size_t end = (rank == size - 1) ? text_length : start + chunk_size;
   
-  // Локальный подсчет
   std::size_t local_count = 0;
   for (std::size_t i = start; i < end; i++) {
     char c = text[i];
@@ -41,7 +39,6 @@ bool SentencesCounterMPI::RunImpl() {
     }
   }
   
-  // Собираем результаты на процессе 0
   std::size_t global_count = 0;
   MPI_Reduce(&local_count, &global_count, 1, MPI_UNSIGNED_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
   
