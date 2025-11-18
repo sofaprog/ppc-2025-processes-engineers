@@ -10,7 +10,7 @@ namespace makoveeva_s_number_of_sentence {
 
 TEST(makoveeva_s_number_of_sentence, seq_performance_pipeline) {
   std::string test_text = "This is a test sentence. And another one! How about a question? ";
-  // Увеличим текст для performance теста
+
   for (int i = 0; i < 10; i++) {
     test_text += test_text;
   }
