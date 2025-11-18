@@ -4,6 +4,8 @@
 
 #include <string>
 
+#include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
+
 namespace makoveeva_s_number_of_sentence {
 
 SentencesCounterMPI::SentencesCounterMPI(const InType &in) {
@@ -21,7 +23,8 @@ bool SentencesCounterMPI::PreProcessingImpl() {
 }
 
 bool SentencesCounterMPI::RunImpl() {
-  int rank, size;
+  int rank;
+  int size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 

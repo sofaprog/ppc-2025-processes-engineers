@@ -12,20 +12,6 @@ class SentencesCounterMPI : public BaseTask {
   }
   explicit SentencesCounterMPI(const InType &in);
 
-  // ДОБАВИТЬ публичные методы для тестов
-  bool validation() {
-    return ValidationImpl();
-  }
-  bool pre_processing() {
-    return PreProcessingImpl();
-  }
-  bool run() {
-    return RunImpl();
-  }
-  bool post_processing() {
-    return PostProcessingImpl();
-  }
-
  private:
   bool ValidationImpl() override;
   bool PreProcessingImpl() override;

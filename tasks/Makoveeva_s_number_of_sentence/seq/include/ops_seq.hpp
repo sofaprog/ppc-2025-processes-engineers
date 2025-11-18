@@ -1,7 +1,10 @@
 #pragma once
 
-#include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
-#include "task/include/task.hpp"
+#include <cstddef>
+#include <string>
+
+#include "makoveeva_s_number_of_sentence/common/include/common.hpp"
+#include "makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
 
 namespace makoveeva_s_number_of_sentence {
 
@@ -11,20 +14,6 @@ class SentencesCounterSEQ : public BaseTask {
     return ppc::task::TypeOfTask::kSEQ;
   }
   explicit SentencesCounterSEQ(const InType &in);
-
-  // ДОБАВИТЬ публичные методы для тестов
-  bool validation() {
-    return ValidationImpl();
-  }
-  bool pre_processing() {
-    return PreProcessingImpl();
-  }
-  bool run() {
-    return RunImpl();
-  }
-  bool post_processing() {
-    return PostProcessingImpl();
-  }
 
  private:
   bool ValidationImpl() override;
