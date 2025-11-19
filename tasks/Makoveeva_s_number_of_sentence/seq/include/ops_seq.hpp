@@ -4,7 +4,7 @@
 #include <string>
 
 #include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
-#include "modules/task/include/task.hpp"
+#include "task/include/task.hpp"
 
 namespace makoveeva_s_number_of_sentence {
 
