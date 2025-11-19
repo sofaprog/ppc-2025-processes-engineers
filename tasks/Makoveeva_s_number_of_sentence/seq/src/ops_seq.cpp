@@ -3,9 +3,13 @@
 #include <cstddef>
 #include <string>
 
-#include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
+#include "task/include/task.hpp"
 
 namespace makoveeva_s_number_of_sentence {
+
+ppc::task::TypeOfTask SentencesCounterSEQ::GetStaticTypeOfTask() {
+  return ppc::task::TypeOfTask::kSEQ;
+}
 
 SentencesCounterSEQ::SentencesCounterSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());

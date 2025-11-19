@@ -1,12 +1,18 @@
 #include <gtest/gtest.h>
 
+#include <string>
+
 #include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
 #include "Makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
 #include "Makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
 
 namespace makoveeva_s_number_of_sentence {
 
-// Вспомогательная функция для проверки SEQ
+// ОБЪЯВЛЕНИЯ функций
+void TestSentencesCounterSEQ(const std::string &text, std::size_t expected_count);
+void TestSentencesCounterMPI(const std::string &text, std::size_t expected_count);
+
+// ОПРЕДЕЛЕНИЯ функций
 void TestSentencesCounterSEQ(const std::string &text, std::size_t expected_count) {
   auto task = SentencesCounterSEQ(text);
   EXPECT_TRUE(task.Validation());
@@ -16,7 +22,6 @@ void TestSentencesCounterSEQ(const std::string &text, std::size_t expected_count
   EXPECT_EQ(task.GetOutput(), expected_count);
 }
 
-// Вспомогательная функция для проверки MPI
 void TestSentencesCounterMPI(const std::string &text, std::size_t expected_count) {
   auto task = SentencesCounterMPI(text);
   EXPECT_TRUE(task.Validation());
@@ -26,6 +31,7 @@ void TestSentencesCounterMPI(const std::string &text, std::size_t expected_count
   EXPECT_EQ(task.GetOutput(), expected_count);
 }
 
+// ТЕСТЫ
 TEST(makoveeva_s_number_of_sentence, seq_empty_text) {
   TestSentencesCounterSEQ("", 0UL);
 }

@@ -6,9 +6,7 @@ namespace makoveeva_s_number_of_sentence {
 
 class SentencesCounterSEQ : public BaseTask {
  public:
-  static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
-    return ppc::task::TypeOfTask::kSEQ;
-  }
+  static ppc::task::TypeOfTask GetStaticTypeOfTask();
   explicit SentencesCounterSEQ(const InType &in);
 
  private:
