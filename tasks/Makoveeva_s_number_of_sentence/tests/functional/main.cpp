@@ -7,7 +7,7 @@
 namespace makoveeva_s_number_of_sentence {
 
 // Вспомогательная функция для проверки SEQ
-void TestSentencesCounterSEQ(const std::string& text, std::size_t expected_count) {
+void TestSentencesCounterSEQ(const std::string &text, std::size_t expected_count) {
   auto task = SentencesCounterSEQ(text);
   EXPECT_TRUE(task.Validation());
   EXPECT_TRUE(task.PreProcessing());
@@ -17,7 +17,7 @@ void TestSentencesCounterSEQ(const std::string& text, std::size_t expected_count
 }
 
 // Вспомогательная функция для проверки MPI
-void TestSentencesCounterMPI(const std::string& text, std::size_t expected_count) {
+void TestSentencesCounterMPI(const std::string &text, std::size_t expected_count) {
   auto task = SentencesCounterMPI(text);
   EXPECT_TRUE(task.Validation());
   EXPECT_TRUE(task.PreProcessing());
