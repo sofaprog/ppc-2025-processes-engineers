@@ -12,6 +12,8 @@ class SentencesCounterMPI : public BaseTask {
   }
   explicit SentencesCounterMPI(const InType &in);
 
+
+
  private:
   bool ValidationImpl() override;
   bool PreProcessingImpl() override;
