@@ -2,6 +2,7 @@
 
 #include <mpi.h>
 
+#include <cstddef>
 #include <string>
 
 #include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
@@ -23,8 +24,8 @@ bool SentencesCounterMPI::PreProcessingImpl() {
 }
 
 bool SentencesCounterMPI::RunImpl() {
-  int rank;
-  int size;
+  int rank = 0;
+  int size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 

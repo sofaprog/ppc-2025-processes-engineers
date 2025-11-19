@@ -1,5 +1,6 @@
 #include "Makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
 
+#include <cstddef>
 #include <string>
 
 #include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
