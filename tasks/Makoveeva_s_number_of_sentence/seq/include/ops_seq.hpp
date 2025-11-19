@@ -1,9 +1,10 @@
 #pragma once
 
-#include "Makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
-#include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
-#include <cstddef> 
+#include <cstddef>
 #include <string>
+
+#include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
+#include "Makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
 
 namespace makoveeva_s_number_of_sentence {
 
@@ -13,8 +14,6 @@ class SentencesCounterSEQ : public BaseTask {
     return ppc::task::TypeOfTask::kSEQ;
   }
   explicit SentencesCounterSEQ(const InType &in);
-
-
 
  private:
   bool ValidationImpl() override;
