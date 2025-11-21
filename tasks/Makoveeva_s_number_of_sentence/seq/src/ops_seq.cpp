@@ -1,9 +1,8 @@
 #include "Makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
 
-#include <cstddef>
 #include <string>
 
-#include "task/include/task.hpp"
+#include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
 
 namespace makoveeva_s_number_of_sentence {
 

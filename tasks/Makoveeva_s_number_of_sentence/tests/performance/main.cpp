@@ -2,13 +2,11 @@
 
 #include <string>
 
-#include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
-#include "Makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
 #include "Makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
 
 namespace makoveeva_s_number_of_sentence {
 
-TEST(makoveeva_s_number_of_sentence, seq_performance_pipeline) {
+TEST(MakoveevaSNumberOfSentence, SeqPerformancePipeline) {
   std::string test_text = "This is a test sentence. And another one! How about a question? ";
 
   for (int i = 0; i < 10; i++) {
@@ -24,7 +22,7 @@ TEST(makoveeva_s_number_of_sentence, seq_performance_pipeline) {
   }
 }
 
-TEST(makoveeva_s_number_of_sentence, seq_performance_task) {
+TEST(MakoveevaSNumberOfSentence, SeqPerformanceTask) {
   std::string test_text = "Short text. For performance!";
 
   for (int i = 0; i < 5; i++) {

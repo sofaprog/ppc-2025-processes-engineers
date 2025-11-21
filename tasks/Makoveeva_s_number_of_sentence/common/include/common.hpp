@@ -1,10 +1,8 @@
 #pragma once
-#include <cstddef>
 #include <string>
 #include <tuple>
 
 #include "task/include/task.hpp"
-#pragma once
 
 namespace makoveeva_s_number_of_sentence {
 
