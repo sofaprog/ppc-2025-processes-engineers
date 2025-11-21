@@ -38,7 +38,7 @@ static void TestSentencesCounterMPI(const std::string &text, int expected_count)
   EXPECT_TRUE(task.Run());
   EXPECT_TRUE(task.PostProcessing());
 
-  int rank;
+  int rank=0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   if (rank == 0) {
     EXPECT_EQ(task.GetOutput(), expected_count);
