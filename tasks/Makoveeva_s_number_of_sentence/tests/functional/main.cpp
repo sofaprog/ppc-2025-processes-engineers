@@ -8,12 +8,10 @@
 
 namespace makoveeva_s_number_of_sentence {
 
-// ОБЪЯВЛЕНИЯ функций
-void TestSentencesCounterSEQ(const std::string &text, std::size_t expected_count);
-void TestSentencesCounterMPI(const std::string &text, std::size_t expected_count);
+void TestSentencesCounterSEQ(const std::string &text, int expected_count);
+void TestSentencesCounterMPI(const std::string &text, int expected_count);
 
-// ОПРЕДЕЛЕНИЯ функций
-void TestSentencesCounterSEQ(const std::string &text, std::size_t expected_count) {
+void TestSentencesCounterSEQ(const std::string &text, int expected_count) {
   auto task = SentencesCounterSEQ(text);
   EXPECT_TRUE(task.Validation());
   EXPECT_TRUE(task.PreProcessing());
@@ -22,7 +20,7 @@ void TestSentencesCounterSEQ(const std::string &text, std::size_t expected_count
   EXPECT_EQ(task.GetOutput(), expected_count);
 }
 
-void TestSentencesCounterMPI(const std::string &text, std::size_t expected_count) {
+void TestSentencesCounterMPI(const std::string &text, int expected_count) {
   auto task = SentencesCounterMPI(text);
   EXPECT_TRUE(task.Validation());
   EXPECT_TRUE(task.PreProcessing());
@@ -31,29 +29,28 @@ void TestSentencesCounterMPI(const std::string &text, std::size_t expected_count
   EXPECT_EQ(task.GetOutput(), expected_count);
 }
 
-// ТЕСТЫ
 TEST(makoveeva_s_number_of_sentence, seq_empty_text) {
-  TestSentencesCounterSEQ("", 0UL);
+  TestSentencesCounterSEQ("", 0);
 }
 
 TEST(makoveeva_s_number_of_sentence, seq_single_sentence) {
-  TestSentencesCounterSEQ("Hello world.", 1UL);
+  TestSentencesCounterSEQ("Hello world.", 1);
 }
 
 TEST(makoveeva_s_number_of_sentence, seq_multiple_sentences) {
-  TestSentencesCounterSEQ("First! Second? Third.", 3UL);
+  TestSentencesCounterSEQ("First! Second? Third.", 3);
 }
 
 TEST(makoveeva_s_number_of_sentence, seq_no_sentences) {
-  TestSentencesCounterSEQ("Just text without sentence endings", 0UL);
+  TestSentencesCounterSEQ("Just text without sentence endings", 0);
 }
 
 TEST(makoveeva_s_number_of_sentence, seq_mixed_endings) {
-  TestSentencesCounterSEQ("Test one. Test two! Test three?", 3UL);
+  TestSentencesCounterSEQ("Test one. Test two! Test three?", 3);
 }
 
 TEST(makoveeva_s_number_of_sentence, mpi_basic_test) {
-  TestSentencesCounterMPI("Test sentence. Another one!", 2UL);
+  TestSentencesCounterMPI("Test sentence. Another one!", 2);
 }
 
 }  // namespace makoveeva_s_number_of_sentence

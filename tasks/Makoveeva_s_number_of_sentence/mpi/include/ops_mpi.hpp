@@ -2,11 +2,14 @@
 
 #include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
 #include "task/include/task.hpp"
+
 namespace makoveeva_s_number_of_sentence {
 
 class SentencesCounterMPI : public BaseTask {
  public:
-  static ppc::task::TypeOfTask GetStaticTypeOfTask();
+  static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
+    return ppc::task::TypeOfTask::kMPI;
+  }
   explicit SentencesCounterMPI(const InType &in);
 
  private:

@@ -9,10 +9,6 @@
 
 namespace makoveeva_s_number_of_sentence {
 
-ppc::task::TypeOfTask SentencesCounterMPI::GetStaticTypeOfTask() {
-  return ppc::task::TypeOfTask::kMPI;
-}
-
 SentencesCounterMPI::SentencesCounterMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
@@ -34,22 +30,22 @@ bool SentencesCounterMPI::RunImpl() {
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   const std::string &text = GetInput();
-  std::size_t text_length = text.length();
+  int text_length = static_cast<int>(text.length());
 
-  std::size_t chunk_size = text_length / size;
-  std::size_t start = rank * chunk_size;
-  std::size_t end = (rank == size - 1) ? text_length : start + chunk_size;
+  int chunk_size = text_length / size;
+  int start = rank * chunk_size;
+  int end = (rank == size - 1) ? text_length : start + chunk_size;
 
-  std::size_t local_count = 0;
-  for (std::size_t i = start; i < end; i++) {
+  int local_count = 0;
+  for (int i = start; i < end; i++) {
     char c = text[i];
     if (c == '.' || c == '!' || c == '?') {
       local_count++;
     }
   }
 
-  std::size_t global_count = 0;
-  MPI_Reduce(&local_count, &global_count, 1, MPI_UNSIGNED_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+  int global_count = 0;
+  MPI_Reduce(&local_count, &global_count, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
   if (rank == 0) {
     GetOutput() = global_count;

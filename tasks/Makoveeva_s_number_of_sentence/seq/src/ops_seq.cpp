@@ -7,10 +7,6 @@
 
 namespace makoveeva_s_number_of_sentence {
 
-ppc::task::TypeOfTask SentencesCounterSEQ::GetStaticTypeOfTask() {
-  return ppc::task::TypeOfTask::kSEQ;
-}
-
 SentencesCounterSEQ::SentencesCounterSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
@@ -27,7 +23,7 @@ bool SentencesCounterSEQ::PreProcessingImpl() {
 
 bool SentencesCounterSEQ::RunImpl() {
   const std::string &text = GetInput();
-  std::size_t sentence_count = 0;
+  int sentence_count = 0;
 
   for (char c : text) {
     if (c == '.' || c == '!' || c == '?') {
