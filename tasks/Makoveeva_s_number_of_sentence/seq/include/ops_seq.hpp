@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
-
+#include "task/include/task.hpp"
 namespace makoveeva_s_number_of_sentence {
 
 class SentencesCounterSEQ : public BaseTask {
