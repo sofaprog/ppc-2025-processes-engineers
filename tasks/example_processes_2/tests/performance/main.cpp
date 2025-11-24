@@ -5,7 +5,7 @@
 #include "example_processes_2/seq/include/ops_seq.hpp"
 #include "util/include/perf_test_util.hpp"
 
-namespace nesterov_a_test_task_processes {
+namespace nesterov_a_test_task_processes_2 {
 
 class ExampleRunPerfTestProcesses2 : public ppc::util::BaseRunPerfTests<InType, OutType> {
   const int kCount_ = 100;
@@ -37,4 +37,4 @@ const auto kPerfTestName = ExampleRunPerfTestProcesses2::CustomPerfTestName;
 
 INSTANTIATE_TEST_SUITE_P(RunModeTests, ExampleRunPerfTestProcesses2, kGtestValues, kPerfTestName);
 
-}  // namespace nesterov_a_test_task_processes
+}  // namespace nesterov_a_test_task_processes_2

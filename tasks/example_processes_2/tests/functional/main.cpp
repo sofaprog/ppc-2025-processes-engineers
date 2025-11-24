@@ -18,7 +18,7 @@
 #include "util/include/func_test_util.hpp"
 #include "util/include/util.hpp"
 
-namespace nesterov_a_test_task_processes {
+namespace nesterov_a_test_task_processes_2 {
 
 class NesterovARunFuncTestsProcesses2 : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
@@ -83,4 +83,4 @@ INSTANTIATE_TEST_SUITE_P(PicMatrixTests, NesterovARunFuncTestsProcesses2, kGtest
 
 }  // namespace
 
-}  // namespace nesterov_a_test_task_processes
+}  // namespace nesterov_a_test_task_processes_2
