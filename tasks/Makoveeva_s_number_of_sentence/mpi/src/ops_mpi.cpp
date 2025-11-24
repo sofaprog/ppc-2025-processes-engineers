@@ -28,16 +28,31 @@ bool SentencesCounterMPI::RunImpl() {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  const std::string &text = GetInput();
-  int text_length = static_cast<int>(text.length());
+  std::string local_text;
+  int text_length = 0;
+
+  if (rank == 0) {
+    local_text = GetInput();
+    text_length = local_text.length();
+  }
+
+  MPI_Bcast(&text_length, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  if (rank != 0) {
+    local_text.resize(text_length);
+  }
+
+  MPI_Bcast(&local_text[0], text_length, MPI_CHAR, 0, MPI_COMM_WORLD);
 
   int chunk_size = text_length / size;
-  int start = rank * chunk_size;
-  int end = (rank == size - 1) ? text_length : start + chunk_size;
+  int remainder = text_length % size;
+
+  int start = rank * chunk_size + std::min(rank, remainder);
+  int end = start + chunk_size + (rank < remainder ? 1 : 0);
 
   int local_count = 0;
-  for (int i = start; i < end; i++) {
-    char c = text[i];
+  for (int i = start; i < end && i < text_length; i++) {
+    char c = local_text[i];
     if (c == '.' || c == '!' || c == '?') {
       local_count++;
     }
