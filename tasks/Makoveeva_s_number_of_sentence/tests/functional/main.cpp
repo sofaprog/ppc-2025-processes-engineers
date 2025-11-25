@@ -2,36 +2,38 @@
 #include <mpi.h>
 
 #include <string>
+#include <tuple>
 
 #include "Makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
 #include "Makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
 
 namespace makoveeva_s_number_of_sentence {
 
-class MPITest : public ::testing::Test {
- protected:
-  void SetUp() override {
-    MPI_Init(nullptr, nullptr);
-  }
+class SentencesCounterSEQTest : public testing::TestWithParam<std::tuple<std::string, int>> {};
 
-  void TearDown() override {
-    MPI_Finalize();
-  }
-};
-
-static void TestSentencesCounterSEQ(const std::string &text, int expected_count);
-static void TestSentencesCounterMPI(const std::string &text, int expected_count);
-
-static void TestSentencesCounterSEQ(const std::string &text, int expected_count) {
+TEST_P(SentencesCounterSEQTest, CountsCorrectly_seq) {
+  auto [text, expected] = GetParam();
   auto task = SentencesCounterSEQ(text);
   EXPECT_TRUE(task.Validation());
   EXPECT_TRUE(task.PreProcessing());
   EXPECT_TRUE(task.Run());
   EXPECT_TRUE(task.PostProcessing());
-  EXPECT_EQ(task.GetOutput(), expected_count);
+  EXPECT_EQ(task.GetOutput(), expected);
 }
 
-static void TestSentencesCounterMPI(const std::string &text, int expected_count) {
+class SentencesCounterMPITest : public testing::TestWithParam<std::tuple<std::string, int>> {
+ protected:
+  static void SetUpTestSuite() {
+    MPI_Init(nullptr, nullptr);
+  }
+
+  static void TearDownTestSuite() {
+    MPI_Finalize();
+  }
+};
+
+TEST_P(SentencesCounterMPITest, CountsCorrectly_mpi) {
+  auto [text, expected] = GetParam();
   auto task = SentencesCounterMPI(text);
   EXPECT_TRUE(task.Validation());
   EXPECT_TRUE(task.PreProcessing());
@@ -41,32 +43,20 @@ static void TestSentencesCounterMPI(const std::string &text, int expected_count)
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   if (rank == 0) {
-    EXPECT_EQ(task.GetOutput(), expected_count);
+    EXPECT_EQ(task.GetOutput(), expected);
   }
 }
 
-TEST(MakoveevaSNumberOfSentence, SeqEmptyText) {
-  TestSentencesCounterSEQ("", 0);
-}
+INSTANTIATE_TEST_SUITE_P(SentenceTest_seq, SentencesCounterSEQTest,
+                         testing::Values(std::make_tuple("", 0), std::make_tuple("Hello world.", 1),
+                                         std::make_tuple("First! Second? Third.", 3),
+                                         std::make_tuple("Just text without sentence endings", 0),
+                                         std::make_tuple("Test one. Test two! Test three?", 3),
+                                         std::make_tuple("A.B.C", 2), std::make_tuple("Wow! Amazing?", 2)));
 
-TEST(MakoveevaSNumberOfSentence, SeqSingleSentence) {
-  TestSentencesCounterSEQ("Hello world.", 1);
-}
-
-TEST(MakoveevaSNumberOfSentence, SeqMultipleSentences) {
-  TestSentencesCounterSEQ("First! Second? Third.", 3);
-}
-
-TEST(MakoveevaSNumberOfSentence, SeqNoSentences) {
-  TestSentencesCounterSEQ("Just text without sentence endings", 0);
-}
-
-TEST(MakoveevaSNumberOfSentence, SeqMixedEndings) {
-  TestSentencesCounterSEQ("Test one. Test two! Test three?", 3);
-}
-
-TEST_F(MPITest, MpiBasicTest) {
-  TestSentencesCounterMPI("Test sentence. Another one!", 2);
-}
+INSTANTIATE_TEST_SUITE_P(SentenceTests_mpi, SentencesCounterMPITest,
+                         testing::Values(std::make_tuple("", 0), std::make_tuple("Hello world.", 1),
+                                         std::make_tuple("First! Second? Third.", 3),
+                                         std::make_tuple("Test sentence. Another one!", 2)));
 
 }  // namespace makoveeva_s_number_of_sentence
