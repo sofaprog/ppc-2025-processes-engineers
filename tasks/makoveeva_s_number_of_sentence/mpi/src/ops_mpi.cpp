@@ -1,11 +1,11 @@
-#include "Makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
+#include "makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
 
 #include <mpi.h>
 
 #include <algorithm>
 #include <string>
 
-#include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
+#include "makoveeva_s_number_of_sentence/common/include/common.hpp"
 
 namespace makoveeva_s_number_of_sentence {
 

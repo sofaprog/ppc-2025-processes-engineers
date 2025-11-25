@@ -7,9 +7,9 @@
 #include <string>
 #include <tuple>
 
-#include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
-#include "Makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
-#include "Makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
+#include "makoveeva_s_number_of_sentence/common/include/common.hpp"
+#include "makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
+#include "makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
 #include "util/include/func_test_util.hpp"
 
 namespace makoveeva_s_number_of_sentence {
