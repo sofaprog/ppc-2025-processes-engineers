@@ -1,79 +1,80 @@
 #include <gtest/gtest.h>
 
+#include <array>
 #include <string>
-#include <tuple>
 
+#include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
 #include "Makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
 #include "Makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
+#include "util/include/perf_test_util.hpp"
 
 namespace makoveeva_s_number_of_sentence {
 
-class SentencesCounterSEQPerfTest : public testing::TestWithParam<std::tuple<std::string, int>> {};
+class MakoveevaSNumberOfSentencePerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
+  InType input_data_;
+  OutType expected_output_ = 0;
 
-TEST_P(SentencesCounterSEQPerfTest, Pipeline_perf) {
-  auto [text, expected] = GetParam();
-  auto task = SentencesCounterSEQ(text);
-  EXPECT_TRUE(task.Validation());
-  EXPECT_TRUE(task.PreProcessing());
-  EXPECT_TRUE(task.Run());
-  EXPECT_TRUE(task.PostProcessing());
-  EXPECT_EQ(task.GetOutput(), expected);
-}
+  void SetUp() override {
+    const int paragraphs = 1000;
+    const int sentences_per_paragraph = 50;
+    const int words_per_sentence = 8;
 
-TEST_P(SentencesCounterSEQPerfTest, TaskRun_perf) {
-  auto [text, expected] = GetParam();
-  auto task = SentencesCounterSEQ(text);
-  EXPECT_TRUE(task.Validation());
-  EXPECT_TRUE(task.PreProcessing());
+    input_data_.clear();
+    expected_output_ = 0;
 
-  for (int i = 0; i < 10; i++) {
-    EXPECT_TRUE(task.Run());
+    for (int p = 0; p < paragraphs; ++p) {
+      for (int s = 0; s < sentences_per_paragraph; ++s) {
+        input_data_ += static_cast<char>('A' + ((p + s) % 26));
+
+        for (int w = 0; w < words_per_sentence; ++w) {
+          int base_char = (p * 100 + s * 10 + w) % 26;
+          int word_len = 3 + ((p + s + w) % 6);
+
+          for (int c = 0; c < word_len; ++c) {
+            input_data_ += static_cast<char>('a' + ((base_char + c) % 26));
+          }
+
+          if (w < words_per_sentence - 1) {
+            input_data_ += ' ';
+          }
+        }
+
+        constexpr std::array<char, 3> kPunctuation = {'.', '!', '?'};
+        char punctuation = kPunctuation[(p + s) % 3];
+        input_data_ += punctuation;
+        expected_output_++;
+
+        if (s < sentences_per_paragraph - 1) {
+          input_data_ += ' ';
+        }
+      }
+
+      if (p < paragraphs - 1) {
+        input_data_ += "\n\n";
+      }
+    }
   }
 
-  EXPECT_TRUE(task.PostProcessing());
-  EXPECT_EQ(task.GetOutput(), expected);
-}
-
-class SentencesCounterMPIPerfTest : public testing::TestWithParam<std::tuple<std::string, int>> {};
-
-TEST_P(SentencesCounterMPIPerfTest, Pipeline_perf) {
-  auto [text, expected] = GetParam();
-  auto task = SentencesCounterMPI(text);
-  EXPECT_TRUE(task.Validation());
-  EXPECT_TRUE(task.PreProcessing());
-  EXPECT_TRUE(task.Run());
-  EXPECT_TRUE(task.PostProcessing());
-}
-
-TEST_P(SentencesCounterMPIPerfTest, TaskRun_perf) {
-  auto [text, expected] = GetParam();
-  auto task = SentencesCounterMPI(text);
-  EXPECT_TRUE(task.Validation());
-  EXPECT_TRUE(task.PreProcessing());
-
-  for (int i = 0; i < 10; i++) {
-    EXPECT_TRUE(task.Run());
+  bool CheckTestOutputData(OutType &output_data) final {
+    return expected_output_ == output_data;
   }
 
-  EXPECT_TRUE(task.PostProcessing());
+  InType GetTestInputData() final {
+    return input_data_;
+  }
+};
+
+TEST_P(MakoveevaSNumberOfSentencePerfTests, RunPerfModes) {
+  ExecuteTest(GetParam());
 }
 
-INSTANTIATE_TEST_SUITE_P(PerformanceTests_seq, SentencesCounterSEQPerfTest,
-                         testing::Values(std::make_tuple("Short text. For performance!", 2),
-                                         std::make_tuple("This is a long text with many sentences. "
-                                                         "It should be used for performance testing! "
-                                                         "How many sentences can we count? "
-                                                         "Let's find out. This is another sentence! "
-                                                         "And one more? And another. And yet another! "
-                                                         "The quick brown fox jumps over the lazy dog.",
-                                                         9)));
+const auto kAllPerfTasks = ppc::util::MakeAllPerfTasks<InType, SentencesCounterMPI, SentencesCounterSEQ>(
+    PPC_SETTINGS_makoveeva_s_number_of_sentence);
 
-INSTANTIATE_TEST_SUITE_P(PerformanceTests_mpi, SentencesCounterMPIPerfTest,
-                         testing::Values(std::make_tuple("Short text. For performance!", 2),
-                                         std::make_tuple("This is a long text with many sentences. "
-                                                         "It should be used for performance testing! "
-                                                         "How many sentences can we count? "
-                                                         "Let's find out. This is another sentence!",
-                                                         4)));
+const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);
+
+const auto kPerfTestName = MakoveevaSNumberOfSentencePerfTests::CustomPerfTestName;
+
+INSTANTIATE_TEST_SUITE_P(RunModeTests, MakoveevaSNumberOfSentencePerfTests, kGtestValues, kPerfTestName);
 
 }  // namespace makoveeva_s_number_of_sentence

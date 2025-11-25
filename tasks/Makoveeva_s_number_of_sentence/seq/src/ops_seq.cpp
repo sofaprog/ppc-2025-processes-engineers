@@ -13,7 +13,7 @@ SentencesCounterSEQ::SentencesCounterSEQ(const InType &in) {
 }
 
 bool SentencesCounterSEQ::ValidationImpl() {
-  return (GetOutput() == 0);
+  return true;
 }
 
 bool SentencesCounterSEQ::PreProcessingImpl() {
@@ -23,10 +23,16 @@ bool SentencesCounterSEQ::PreProcessingImpl() {
 bool SentencesCounterSEQ::RunImpl() {
   const std::string &text = GetInput();
   int sentence_count = 0;
+  bool in_sentence_end = false;
 
   for (char c : text) {
     if (c == '.' || c == '!' || c == '?') {
-      sentence_count++;
+      if (!in_sentence_end) {
+        sentence_count++;
+        in_sentence_end = true;
+      }
+    } else {
+      in_sentence_end = false;
     }
   }
 
