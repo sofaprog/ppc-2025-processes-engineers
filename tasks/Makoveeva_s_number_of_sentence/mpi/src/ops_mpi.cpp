@@ -2,6 +2,7 @@
 
 #include <mpi.h>
 
+#include <algorithm>
 #include <string>
 
 #include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
@@ -33,7 +34,7 @@ bool SentencesCounterMPI::RunImpl() {
 
   if (rank == 0) {
     local_text = GetInput();
-    text_length = local_text.length();
+    text_length = static_cast<int>(local_text.length());
   }
 
   MPI_Bcast(&text_length, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -42,12 +43,12 @@ bool SentencesCounterMPI::RunImpl() {
     local_text.resize(text_length);
   }
 
-  MPI_Bcast(&local_text[0], text_length, MPI_CHAR, 0, MPI_COMM_WORLD);
+  MPI_Bcast(local_text.data(), text_length, MPI_CHAR, 0, MPI_COMM_WORLD);
 
   int chunk_size = text_length / size;
   int remainder = text_length % size;
 
-  int start = rank * chunk_size + std::min(rank, remainder);
+  int start = (rank * chunk_size) + std::min(rank, remainder);
   int end = start + chunk_size + (rank < remainder ? 1 : 0);
 
   int local_count = 0;
