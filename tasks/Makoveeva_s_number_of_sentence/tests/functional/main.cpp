@@ -86,8 +86,11 @@ const std::array<TestType, 24> kTestParam = {
     std::make_tuple("data!!!result.", "2"), std::make_tuple("input.!?output.", "2")};
 
 const auto kTestTasksList = std::tuple_cat(
-    ppc::util::AddFuncTask<SentencesCounterMPI, InType>(kTestParam, PPC_SETTINGS_makoveeva_s_number_of_sentence),
-    ppc::util::AddFuncTask<SentencesCounterSEQ, InType>(kTestParam, PPC_SETTINGS_makoveeva_s_number_of_sentence));
+    ppc::util::AddFuncTask<SentencesCounterMPI, InType>(
+        kTestParam, "makoveeva_s_number_of_sentence"),
+    ppc::util::AddFuncTask<SentencesCounterSEQ, InType>(
+        kTestParam, "makoveeva_s_number_of_sentence")
+);
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
