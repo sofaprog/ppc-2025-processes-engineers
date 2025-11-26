@@ -60,11 +60,10 @@ TEST_P(MakoveevaSNumberOfSentencePerfTests, RunPerfModes) {
 }
 
 #ifndef PPC_SETTINGS_makoveeva_s_number_of_sentence
-#define PPC_SETTINGS_makoveeva_s_number_of_sentence "makoveeva_s_number_of_sentence"
+#  define PPC_SETTINGS_makoveeva_s_number_of_sentence "makoveeva_s_number_of_sentence"
 #endif
 
-const auto kAllPerfTasks = ppc::util::MakeAllPerfTasks<InType, SentencesCounterMPI,
-                                                       SentencesCounterSEQ>(
+const auto kAllPerfTasks = ppc::util::MakeAllPerfTasks<InType, SentencesCounterMPI, SentencesCounterSEQ>(
     PPC_SETTINGS_makoveeva_s_number_of_sentence);
 
 const auto kGtestValues = ppc::util::TupleToGTestValues(kAllPerfTasks);

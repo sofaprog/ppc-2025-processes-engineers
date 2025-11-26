@@ -14,8 +14,7 @@
 
 namespace makoveeva_s_number_of_sentence {
 
-class MakoveevaSNumberOfSentenceRunFuncTestsProcesses
-    : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
+class MakoveevaSNumberOfSentenceRunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
     std::string input = std::get<0>(test_param);
@@ -67,48 +66,43 @@ TEST_P(MakoveevaSNumberOfSentenceRunFuncTestsProcesses, CountSentences) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 24> kTestParam = {
-    std::make_tuple("Hello world.", "1"), 
-    std::make_tuple("Hello! How are you?", "2"),
-    std::make_tuple("This is a test. Another sentence! And one more?", "3"), 
-    std::make_tuple("", "0"),
-    std::make_tuple("No sentences here", "0"), 
-    std::make_tuple("One. Two. Three.", "3"),
-    std::make_tuple("Multiple punctuation...!!!", "1"), 
-    std::make_tuple("Mix. Of! Different? Endings.", "4"),
-    std::make_tuple("Only dots...", "1"), 
-    std::make_tuple("Single! Exclamation!", "2"),
-    std::make_tuple("Question? Answer! Statement.", "3"), 
-    std::make_tuple("Wow!!! Amazing!!! Great!!!", "3"),
-    std::make_tuple("A.B.C.D.E.F.G.H.I.J.", "10"),
-    std::make_tuple("Just one very long sentence without any ending", "0"), 
-    std::make_tuple("Start. Middle! End?", "3"),
-    std::make_tuple("A.", "1"),               
-    std::make_tuple(".!?", "1"),              
-    std::make_tuple("!?.", "1"),              
-    std::make_tuple("Hello . World !", "2"),  
-    std::make_tuple("A.B.C", "2"),            
-    std::make_tuple("abc..def.", "2"),        
-    std::make_tuple("abc...def.", "2"),       
-    std::make_tuple("abc!!!def.", "2"),       
-    std::make_tuple("abc.!?def.", "2")        
-};
+const std::array<TestType, 24> kTestParam = {std::make_tuple("Hello world.", "1"),
+                                             std::make_tuple("Hello! How are you?", "2"),
+                                             std::make_tuple("This is a test. Another sentence! And one more?", "3"),
+                                             std::make_tuple("", "0"),
+                                             std::make_tuple("No sentences here", "0"),
+                                             std::make_tuple("One. Two. Three.", "3"),
+                                             std::make_tuple("Multiple punctuation...!!!", "1"),
+                                             std::make_tuple("Mix. Of! Different? Endings.", "4"),
+                                             std::make_tuple("Only dots...", "1"),
+                                             std::make_tuple("Single! Exclamation!", "2"),
+                                             std::make_tuple("Question? Answer! Statement.", "3"),
+                                             std::make_tuple("Wow!!! Amazing!!! Great!!!", "3"),
+                                             std::make_tuple("A.B.C.D.E.F.G.H.I.J.", "10"),
+                                             std::make_tuple("Just one very long sentence without any ending", "0"),
+                                             std::make_tuple("Start. Middle! End?", "3"),
+                                             std::make_tuple("A.", "1"),
+                                             std::make_tuple(".!?", "1"),
+                                             std::make_tuple("!?.", "1"),
+                                             std::make_tuple("Hello . World !", "2"),
+                                             std::make_tuple("A.B.C", "2"),
+                                             std::make_tuple("abc..def.", "2"),
+                                             std::make_tuple("abc...def.", "2"),
+                                             std::make_tuple("abc!!!def.", "2"),
+                                             std::make_tuple("abc.!?def.", "2")};
 
 #ifndef PPC_SETTINGS_makoveeva_s_number_of_sentence
-#define PPC_SETTINGS_makoveeva_s_number_of_sentence "makoveeva_s_number_of_sentence"
+#  define PPC_SETTINGS_makoveeva_s_number_of_sentence "makoveeva_s_number_of_sentence"
 #endif
 
 const auto kTestTasksList = std::tuple_cat(
-    ppc::util::AddFuncTask<SentencesCounterMPI, InType>(
-        kTestParam, PPC_SETTINGS_makoveeva_s_number_of_sentence),
-    ppc::util::AddFuncTask<SentencesCounterSEQ, InType>(
-        kTestParam, PPC_SETTINGS_makoveeva_s_number_of_sentence)
-);
+    ppc::util::AddFuncTask<SentencesCounterMPI, InType>(kTestParam, PPC_SETTINGS_makoveeva_s_number_of_sentence),
+    ppc::util::AddFuncTask<SentencesCounterSEQ, InType>(kTestParam, PPC_SETTINGS_makoveeva_s_number_of_sentence));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
-const auto kPerfTestName = MakoveevaSNumberOfSentenceRunFuncTestsProcesses::PrintFuncTestName<
-    MakoveevaSNumberOfSentenceRunFuncTestsProcesses>;
+const auto kPerfTestName =
+    MakoveevaSNumberOfSentenceRunFuncTestsProcesses::PrintFuncTestName<MakoveevaSNumberOfSentenceRunFuncTestsProcesses>;
 
 INSTANTIATE_TEST_SUITE_P(SentenceCountingTests, MakoveevaSNumberOfSentenceRunFuncTestsProcesses, kGtestValues,
                          kPerfTestName);
