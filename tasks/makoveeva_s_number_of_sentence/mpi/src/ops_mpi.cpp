@@ -1,15 +1,12 @@
-#include "makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
+#include "Makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
 
 #include <mpi.h>
 
 #include <string>
 
-namespace makoveeva_s_number_of_sentence {
+#include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
 
-SentencesCounterMPI::SentencesCounterMPI(const std::string &input) {
-  SetTypeOfTask(GetStaticTypeOfTask());
-  GetInput() = input;
-  GetOutput() = 0;
+>>>>>>> parent of 22587b9 (again name) namespace makoveeva_s_number_of_sentence { SentencesCounterMPI::SentencesCounterMPI(const std::string &input) { SetTypeOfTask(GetStaticTypeOfTask()); GetInput() = input; GetOutput() = 0;
 }
 
 bool SentencesCounterMPI::ValidationImpl() {

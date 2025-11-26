@@ -1,9 +1,6 @@
 #pragma once
-
-#include <string>
-#include <utility>
-
 #include "makoveeva_s_number_of_sentence/common/include/common.hpp"
+#include "task/include/task.hpp"
 
 namespace makoveeva_s_number_of_sentence {
 
