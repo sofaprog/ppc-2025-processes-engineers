@@ -43,7 +43,6 @@ bool SentencesCounterMPI::RunImpl() {
   }
   MPI_Bcast(text.data(), text_length, MPI_CHAR, 0, MPI_COMM_WORLD);
 
-  // Распределение работы между процессами
   int chunk_size = text_length / size;
   int remainder = text_length % size;
 
@@ -51,7 +50,6 @@ bool SentencesCounterMPI::RunImpl() {
   int end = (rank + 1) * chunk_size + std::min(rank + 1, remainder);
   end = std::min(end, text_length);
 
-  // Локальный подсчет предложений
   int local_count = 0;
   bool in_sentence_end = false;
 
@@ -67,14 +65,12 @@ bool SentencesCounterMPI::RunImpl() {
     }
   }
 
-  // Определяем, заканчивается ли наш чанк знаком препинания
   bool ends_with_punct = false;
   if (end > start) {
     char last_char = text[end - 1];
     ends_with_punct = (last_char == '.' || last_char == '!' || last_char == '?');
   }
 
-  // Собираем информацию о границах
   bool *all_ends_with_punct = nullptr;
   bool *all_starts_after_punct = nullptr;
 
@@ -85,7 +81,6 @@ bool SentencesCounterMPI::RunImpl() {
 
   MPI_Gather(&ends_with_punct, 1, MPI_C_BOOL, all_ends_with_punct, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
 
-  // Определяем, начинается ли чанк после знака препинания
   bool starts_after_punct = false;
   if (start > 0) {
     char prev_char = text[start - 1];
@@ -94,16 +89,12 @@ bool SentencesCounterMPI::RunImpl() {
 
   MPI_Gather(&starts_after_punct, 1, MPI_C_BOOL, all_starts_after_punct, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
 
-  // Корректируем общий счет на root процессе
   int global_count = 0;
   MPI_Reduce(&local_count, &global_count, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
   if (rank == 0) {
-    // Корректируем двойной подсчет разделенных предложений
     for (int i = 1; i < size; i++) {
       if (all_ends_with_punct[i - 1] && all_starts_after_punct[i]) {
-        // Если предыдущий чанк заканчивается знаком препинания,
-        // а текущий начинается после знака препинания - это одно предложение
         global_count--;
       }
     }
@@ -112,7 +103,6 @@ bool SentencesCounterMPI::RunImpl() {
     delete[] all_starts_after_punct;
   }
 
-  // Распространяем результат на все процессы
   MPI_Bcast(&global_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
   GetOutput() = global_count;

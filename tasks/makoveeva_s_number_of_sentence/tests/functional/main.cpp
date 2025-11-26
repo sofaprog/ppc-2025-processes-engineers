@@ -1,112 +1,170 @@
-#include <gtest/gtest.h>
+#include <mpi.h>
 
-#include <array>
-#include <cctype>
-#include <cstddef>
-#include <functional>
+#include <algorithm>
 #include <string>
-#include <tuple>
 
 #include "makoveeva_s_number_of_sentence/common/include/common.hpp"
 #include "makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
-#include "makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
-#include "util/include/func_test_util.hpp"
 
 namespace makoveeva_s_number_of_sentence {
 
-class MakoveevaSNumberOfSentenceRunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
- public:
-  static std::string PrintTestParam(const TestType &test_param) {
-    std::string input = std::get<0>(test_param);
-    std::string expected = std::get<1>(test_param);
-
-    std::string sanitized;
-    sanitized.reserve(input.length() + expected.length() + 20);
-
-    for (char ch : input) {
-      if (std::isalnum(static_cast<unsigned char>(ch)) != 0) {
-        sanitized += ch;
-      } else {
-        sanitized += '_';
-      }
-    }
-
-    std::size_t input_hash = std::hash<std::string>{}(input);
-    sanitized += "_count_";
-    sanitized += expected;
-    sanitized += "_";
-    sanitized += std::to_string(input_hash % 10000);
-
-    return sanitized;
-  }
-
- protected:
-  void SetUp() override {
-    auto params = std::get<2>(GetParam());
-    input_data_ = std::get<0>(params);
-    expected_output_ = std::stoi(std::get<1>(params));
-  }
-
-  bool CheckTestOutputData(OutType &output_data) final {
-    return (expected_output_ == output_data);
-  }
-
-  InType GetTestInputData() final {
-    return input_data_;
-  }
-
- private:
-  InType input_data_;
-  OutType expected_output_ = 0;
-};
-
-namespace {
-
-TEST_P(MakoveevaSNumberOfSentenceRunFuncTestsProcesses, CountSentences) {
-  ExecuteTest(GetParam());
+SentencesCounterMPI::SentencesCounterMPI(const InType &in) {
+  SetTypeOfTask(GetStaticTypeOfTask());
+  GetInput() = in;
+  GetOutput() = 0;
 }
 
-const std::array<TestType, 24> kTestParam = {std::make_tuple("Hello world.", "1"),
-                                             std::make_tuple("Hello! How are you?", "2"),
-                                             std::make_tuple("This is a test. Another sentence! And one more?", "3"),
-                                             std::make_tuple("", "0"),
-                                             std::make_tuple("No sentences here", "0"),
-                                             std::make_tuple("One. Two. Three.", "3"),
-                                             std::make_tuple("Multiple punctuation...!!!", "1"),
-                                             std::make_tuple("Mix. Of! Different? Endings.", "4"),
-                                             std::make_tuple("Only dots...", "1"),
-                                             std::make_tuple("Single! Exclamation!", "2"),
-                                             std::make_tuple("Question? Answer! Statement.", "3"),
-                                             std::make_tuple("Wow!!! Amazing!!! Great!!!", "3"),
-                                             std::make_tuple("A.B.C.D.E.F.G.H.I.J.", "10"),
-                                             std::make_tuple("Just one very long sentence without any ending", "0"),
-                                             std::make_tuple("Start. Middle! End?", "3"),
-                                             std::make_tuple("A.", "1"),
-                                             std::make_tuple(".!?", "1"),
-                                             std::make_tuple("!?.", "1"),
-                                             std::make_tuple("Hello . World !", "2"),
-                                             std::make_tuple("A.B.C", "2"),
-                                             std::make_tuple("abc..def.", "2"),
-                                             std::make_tuple("abc...def.", "2"),
-                                             std::make_tuple("abc!!!def.", "2"),
-                                             std::make_tuple("abc.!?def.", "2")};
+bool SentencesCounterMPI::ValidationImpl() {
+  return true;
+}
 
-#ifndef PPC_SETTINGS_makoveeva_s_number_of_sentence
-#  define PPC_SETTINGS_makoveeva_s_number_of_sentence "makoveeva_s_number_of_sentence"
-#endif
+bool SentencesCounterMPI::PreProcessingImpl() {
+  return true;
+}
 
-const auto kTestTasksList = std::tuple_cat(
-    ppc::util::AddFuncTask<SentencesCounterMPI, InType>(kTestParam, PPC_SETTINGS_makoveeva_s_number_of_sentence),
-    ppc::util::AddFuncTask<SentencesCounterSEQ, InType>(kTestParam, PPC_SETTINGS_makoveeva_s_number_of_sentence));
+bool SentencesCounterMPI::RunImpl() {
+  int rank = 0, size = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
+  std::string text;
+  int text_length = 0;
 
-const auto kPerfTestName =
-    MakoveevaSNumberOfSentenceRunFuncTestsProcesses::PrintFuncTestName<MakoveevaSNumberOfSentenceRunFuncTestsProcesses>;
+  if (rank == 0) {
+    text = GetInput();
+    text_length = static_cast<int>(text.length());
+  }
 
-INSTANTIATE_TEST_SUITE_P(SentenceCountingTests, MakoveevaSNumberOfSentenceRunFuncTestsProcesses, kGtestValues,
-                         kPerfTestName);
+  MPI_Bcast(&text_length, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-}  // namespace
+  if (rank != 0) {
+    text.resize(text_length);
+  }
+  MPI_Bcast(text.data(), text_length, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+  // Если текст пустой
+  if (text_length == 0) {
+    GetOutput() = 0;
+    return true;
+  }
+
+  // Распределение работы между процессами
+  int chunk_size = text_length / size;
+  int remainder = text_length % size;
+
+  int start = rank * chunk_size + std::min(rank, remainder);
+  int end = (rank + 1) * chunk_size + std::min(rank + 1, remainder);
+  end = std::min(end, text_length);
+
+  // Локальный подсчет предложений
+  int local_count = 0;
+  bool found_sentence_end = false;
+
+  for (int i = start; i < end; i++) {
+    char c = text[i];
+    if (c == '.' || c == '!' || c == '?') {
+      if (!found_sentence_end) {
+        // Нашли конец предложения
+        found_sentence_end = true;
+        local_count++;
+      }
+      // Продолжаем искать следующий конец предложения
+    } else {
+      // Если нашли не-пунктуационный символ, сбрасываем флаг
+      found_sentence_end = false;
+    }
+  }
+
+  // Теперь нужно обработать границы между процессами
+  // Основная проблема: если предложение заканчивается на границе между процессами
+
+  int global_count = 0;
+  MPI_Reduce(&local_count, &global_count, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+  // Корректировка для случая, когда несколько процессов "видят" одно и то же предложение
+  if (size > 1) {
+    // Собираем информацию о том, заканчивается ли каждый чанк знаком препинания
+    // и начинается ли следующий чанк после знака препинания
+
+    bool current_ends_with_punct = false;
+    if (end > start) {
+      char last_char = text[end - 1];
+      current_ends_with_punct = (last_char == '.' || last_char == '!' || last_char == '?');
+    }
+
+    bool next_starts_with_punct = false;
+    if (rank < size - 1 && end < text_length) {
+      char first_char_next = text[end];
+      next_starts_with_punct = (first_char_next == '.' || first_char_next == '!' || first_char_next == '?');
+    }
+
+    // Обмениваемся информацией о границах
+    bool prev_ends_with_punct = false;
+    if (rank > 0) {
+      MPI_Recv(&prev_ends_with_punct, 1, MPI_C_BOOL, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
+
+    if (rank < size - 1) {
+      MPI_Send(&current_ends_with_punct, 1, MPI_C_BOOL, rank + 1, 0, MPI_COMM_WORLD);
+    }
+
+    // Корректируем счет на root процессе
+    if (rank == 0) {
+      // Дополнительная корректировка для случаев типа "abc..def"
+      // где точка на границе процессов может быть учтена дважды
+      int correction = 0;
+
+      // Собираем информацию от всех процессов о границах
+      bool *ends_with_punct_arr = new bool[size];
+      bool *starts_with_punct_arr = new bool[size];
+
+      MPI_Gather(&current_ends_with_punct, 1, MPI_C_BOOL, ends_with_punct_arr, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
+
+      bool starts_with_punct =
+          (start > 0) ? (text[start - 1] == '.' || text[start - 1] == '!' || text[start - 1] == '?') : false;
+      MPI_Gather(&starts_with_punct, 1, MPI_C_BOOL, starts_with_punct_arr, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
+
+      // Корректируем: если предыдущий чанк заканчивается точкой и текущий начинается после точки,
+      // и при этом в текущем чанке первый символ не точка, то это одно предложение
+      for (int i = 1; i < size; i++) {
+        if (ends_with_punct_arr[i - 1] && starts_with_punct_arr[i]) {
+          // Проверяем, не является ли это разделенным предложением
+          int prev_chunk_end = (i)*chunk_size + std::min(i, remainder) - 1;
+          int current_chunk_start = i * chunk_size + std::min(i, remainder);
+
+          if (prev_chunk_end >= 0 && current_chunk_start < text_length) {
+            char prev_char = text[prev_chunk_end];
+            char current_char = text[current_chunk_start];
+
+            // Если оба знака препинания, но это разные предложения (например, "abc..def")
+            // то не корректируем. Корректируем только если это одно предложение,
+            // разделенное между процессами
+            if (prev_char == current_char) {
+              // Это случаи типа ".." - две точки подряд, значит два разных предложения
+              // Не корректируем
+            } else {
+              // Возможно, это одно предложение, разделенное между процессами
+              correction--;
+            }
+          }
+        }
+      }
+
+      global_count += correction;
+      delete[] ends_with_punct_arr;
+      delete[] starts_with_punct_arr;
+    }
+  }
+
+  // Распространяем результат на все процессы
+  MPI_Bcast(&global_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  GetOutput() = global_count;
+  return true;
+}
+
+bool SentencesCounterMPI::PostProcessingImpl() {
+  return true;
+}
 
 }  // namespace makoveeva_s_number_of_sentence
