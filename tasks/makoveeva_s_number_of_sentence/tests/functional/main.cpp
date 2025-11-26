@@ -14,7 +14,8 @@
 
 namespace makoveeva_s_number_of_sentence {
 
-class MakoveevaSNumberOfSentenceRunFuncTestsProcesses : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
+class MakoveevaSNumberOfSentenceRunFuncTestsProcesses
+    : public ppc::util::BaseRunFuncTests<InType, OutType, TestType> {
  public:
   static std::string PrintTestParam(const TestType &test_param) {
     std::string input = std::get<0>(test_param);
@@ -67,32 +68,47 @@ TEST_P(MakoveevaSNumberOfSentenceRunFuncTestsProcesses, CountSentences) {
 }
 
 const std::array<TestType, 24> kTestParam = {
-    // Базовые случаи
-    std::make_tuple("Simple case.", "1"), std::make_tuple("First! Second?", "2"),
-    std::make_tuple("Test one. Test two! Test three?", "3"), std::make_tuple("", "0"),
-    std::make_tuple("Text without delimiters", "0"), std::make_tuple("Alpha. Beta. Gamma.", "3"),
+    std::make_tuple("Hello world.", "1"), 
+    std::make_tuple("Hello! How are you?", "2"),
+    std::make_tuple("This is a test. Another sentence! And one more?", "3"), 
+    std::make_tuple("", "0"),
+    std::make_tuple("No sentences here", "0"), 
+    std::make_tuple("One. Two. Three.", "3"),
+    std::make_tuple("Multiple punctuation...!!!", "1"), 
+    std::make_tuple("Mix. Of! Different? Endings.", "4"),
+    std::make_tuple("Only dots...", "1"), 
+    std::make_tuple("Single! Exclamation!", "2"),
+    std::make_tuple("Question? Answer! Statement.", "3"), 
+    std::make_tuple("Wow!!! Amazing!!! Great!!!", "3"),
+    std::make_tuple("A.B.C.D.E.F.G.H.I.J.", "10"),
+    std::make_tuple("Just one very long sentence without any ending", "0"), 
+    std::make_tuple("Start. Middle! End?", "3"),
+    std::make_tuple("A.", "1"),               
+    std::make_tuple(".!?", "1"),              
+    std::make_tuple("!?.", "1"),              
+    std::make_tuple("Hello . World !", "2"),  
+    std::make_tuple("A.B.C", "2"),            
+    std::make_tuple("abc..def.", "2"),        
+    std::make_tuple("abc...def.", "2"),       
+    std::make_tuple("abc!!!def.", "2"),       
+    std::make_tuple("abc.!?def.", "2")        
+};
 
-    // Специальные случаи с последовательными знаками
-    std::make_tuple("Ellipsis... Exclamation!!", "2"), std::make_tuple("Sentence. Another! Different? Final.", "4"),
-    std::make_tuple("Just ellipsis...", "1"), std::make_tuple("Wow! Amazing!", "2"),
-    std::make_tuple("What? Yes! Indeed.", "3"), std::make_tuple("Incredible!!! Fantastic!!!", "2"),
+#ifndef PPC_SETTINGS_makoveeva_s_number_of_sentence
+#define PPC_SETTINGS_makoveeva_s_number_of_sentence "makoveeva_s_number_of_sentence"
+#endif
 
-    // Граничные случаи и краевые условия
-    std::make_tuple("X.Y.Z.W.V.U.T.S.R.Q.", "10"),
-    std::make_tuple("Very long text without any sentence endings whatsoever", "0"),
-    std::make_tuple("Begin. Continue! Finish?", "3"), std::make_tuple("Z.", "1"), std::make_tuple("?!.", "1"),
-    std::make_tuple(".?!", "1"), std::make_tuple("Word . Another !", "2"), std::make_tuple("M.N.O.P", "3"),
-    std::make_tuple("test..example.", "2"), std::make_tuple("text...sample.", "2"),
-    std::make_tuple("data!!!result.", "2"), std::make_tuple("input.!?output.", "2")};
-
-const auto kTestTasksList =
-    std::tuple_cat(ppc::util::AddFuncTask<SentencesCounterMPI, InType>(kTestParam, "makoveeva_s_number_of_sentence"),
-                   ppc::util::AddFuncTask<SentencesCounterSEQ, InType>(kTestParam, "makoveeva_s_number_of_sentence"));
+const auto kTestTasksList = std::tuple_cat(
+    ppc::util::AddFuncTask<SentencesCounterMPI, InType>(
+        kTestParam, PPC_SETTINGS_makoveeva_s_number_of_sentence),
+    ppc::util::AddFuncTask<SentencesCounterSEQ, InType>(
+        kTestParam, PPC_SETTINGS_makoveeva_s_number_of_sentence)
+);
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
-const auto kPerfTestName =
-    MakoveevaSNumberOfSentenceRunFuncTestsProcesses::PrintFuncTestName<MakoveevaSNumberOfSentenceRunFuncTestsProcesses>;
+const auto kPerfTestName = MakoveevaSNumberOfSentenceRunFuncTestsProcesses::PrintFuncTestName<
+    MakoveevaSNumberOfSentenceRunFuncTestsProcesses>;
 
 INSTANTIATE_TEST_SUITE_P(SentenceCountingTests, MakoveevaSNumberOfSentenceRunFuncTestsProcesses, kGtestValues,
                          kPerfTestName);
