@@ -1,4 +1,4 @@
-#include "Makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
+#include "makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
 
 #include <mpi.h>
 
