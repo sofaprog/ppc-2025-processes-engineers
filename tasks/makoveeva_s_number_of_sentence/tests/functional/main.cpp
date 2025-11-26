@@ -7,9 +7,9 @@
 #include <string>
 #include <tuple>
 
-#include "Makoveeva_s_number_of_sentence/common/include/common.hpp"
-#include "Makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
-#include "Makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
+#include "makoveeva_s_number_of_sentence/common/include/common.hpp"
+#include "makoveeva_s_number_of_sentence/mpi/include/ops_mpi.hpp"
+#include "makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
 #include "util/include/func_test_util.hpp"
 
 namespace makoveeva_s_number_of_sentence {
@@ -72,6 +72,7 @@ const std::array<TestType, 24> kTestParam = {
     std::make_tuple("Test one. Test two! Test three?", "3"), std::make_tuple("", "0"),
     std::make_tuple("Text without delimiters", "0"), std::make_tuple("Alpha. Beta. Gamma.", "3"),
 
+    // Специальные случаи с последовательными знаками
     std::make_tuple("Ellipsis... Exclamation!!", "2"), std::make_tuple("Sentence. Another! Different? Final.", "4"),
     std::make_tuple("Just ellipsis...", "1"), std::make_tuple("Wow! Amazing!", "2"),
     std::make_tuple("What? Yes! Indeed.", "3"), std::make_tuple("Incredible!!! Fantastic!!!", "2"),
