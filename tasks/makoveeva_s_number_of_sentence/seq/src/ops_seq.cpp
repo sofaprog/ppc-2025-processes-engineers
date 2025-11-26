@@ -1,14 +1,12 @@
-#include "makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
+#include "Makoveeva_s_number_of_sentence/seq/include/ops_seq.hpp"
 
 #include <string>
 
-#include "makoveeva_s_number_of_sentence/common/include/common.hpp"
-
 namespace makoveeva_s_number_of_sentence {
 
-SentencesCounterSEQ::SentencesCounterSEQ(const InType &in) {
+SentencesCounterSEQ::SentencesCounterSEQ(const std::string &input) {
   SetTypeOfTask(GetStaticTypeOfTask());
-  GetInput() = in;
+  GetInput() = input;
   GetOutput() = 0;
 }
 
@@ -22,21 +20,16 @@ bool SentencesCounterSEQ::PreProcessingImpl() {
 
 bool SentencesCounterSEQ::RunImpl() {
   const std::string &text = GetInput();
-  int sentence_count = 0;
-  bool in_sentence_end = false;
+  int count = 0;
 
-  for (char c : text) {
+  for (size_t i = 0; i < text.length(); ++i) {
+    char c = text[i];
     if (c == '.' || c == '!' || c == '?') {
-      if (!in_sentence_end) {
-        sentence_count++;
-        in_sentence_end = true;
-      }
-    } else {
-      in_sentence_end = false;
+      count++;
     }
   }
 
-  GetOutput() = sentence_count;
+  GetOutput() = count;
   return true;
 }
 
