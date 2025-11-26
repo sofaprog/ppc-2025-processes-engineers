@@ -72,7 +72,6 @@ const std::array<TestType, 24> kTestParam = {
     std::make_tuple("Test one. Test two! Test three?", "3"), std::make_tuple("", "0"),
     std::make_tuple("Text without delimiters", "0"), std::make_tuple("Alpha. Beta. Gamma.", "3"),
 
-
     std::make_tuple("Ellipsis... Exclamation!!", "2"), std::make_tuple("Sentence. Another! Different? Final.", "4"),
     std::make_tuple("Just ellipsis...", "1"), std::make_tuple("Wow! Amazing!", "2"),
     std::make_tuple("What? Yes! Indeed.", "3"), std::make_tuple("Incredible!!! Fantastic!!!", "2"),
