@@ -18,6 +18,7 @@ bool SentencesCounterMPI::ValidationImpl() {
 
 bool SentencesCounterMPI::PreProcessingImpl() {
   return true;
+  //
 }
 
 bool SentencesCounterMPI::RunImpl() {
