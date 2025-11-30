@@ -20,7 +20,6 @@ class SentencesCounterMPI : public BaseTask {
   bool RunImpl() override;
   bool PostProcessingImpl() override;
 
- private:
   static int ProcessTextSegment(const std::string &text_segment, char previous_char);
   static int SkipRepeatedPunctuation(const std::string &text, int current_position);
   static bool IsSentenceEnding(char character);
