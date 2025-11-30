@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "makoveeva_s_number_of_sentence/common/include/common.hpp"
 #include "task/include/task.hpp"
 
@@ -17,6 +19,11 @@ class SentencesCounterMPI : public BaseTask {
   bool PreProcessingImpl() override;
   bool RunImpl() override;
   bool PostProcessingImpl() override;
+
+ private:
+  static int ProcessTextSegment(const std::string &text_segment, char previous_char);
+  static int SkipRepeatedPunctuation(const std::string &text, int current_position);
+  static bool IsSentenceEnding(char character);
 };
 
 }  // namespace makoveeva_s_number_of_sentence

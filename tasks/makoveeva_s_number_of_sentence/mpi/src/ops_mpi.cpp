@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <string>
+#include <vector>
 
 #include "makoveeva_s_number_of_sentence/common/include/common.hpp"
 
@@ -23,89 +24,104 @@ bool SentencesCounterMPI::PreProcessingImpl() {
   return true;
 }
 
+bool SentencesCounterMPI::IsSentenceEnding(char character) {
+  return character == '.' || character == '!' || character == '?';
+}
+
+int SentencesCounterMPI::SkipRepeatedPunctuation(const std::string &text, int current_position) {
+  int position = current_position;
+  while (position < static_cast<int>(text.length()) && IsSentenceEnding(text[position])) {
+    position++;
+  }
+  return position;
+}
+
+int SentencesCounterMPI::ProcessTextSegment(const std::string &text_segment, char previous_char) {
+  int sentence_count = 0;
+  int index = 0;
+  const int segment_length = static_cast<int>(text_segment.length());
+
+  if (segment_length > 0) {
+    char first_char = text_segment[0];
+
+    if (IsSentenceEnding(previous_char) && IsSentenceEnding(first_char)) {
+      index = SkipRepeatedPunctuation(text_segment, 0);
+    }
+  }
+
+  while (index < segment_length) {
+    char current_char = text_segment[index];
+
+    if (IsSentenceEnding(current_char)) {
+      sentence_count++;
+      index = SkipRepeatedPunctuation(text_segment, index + 1);
+    } else {
+      index++;
+    }
+  }
+
+  return sentence_count;
+}
+
 bool SentencesCounterMPI::RunImpl() {
-  int rank = 0, size = 0;
+  int rank = 0;
+  int size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  std::string text;
+  std::string full_text;
   int text_length = 0;
 
   if (rank == 0) {
-    text = GetInput();
-    text_length = static_cast<int>(text.length());
+    full_text = GetInput();
+    text_length = static_cast<int>(full_text.length());
   }
 
   MPI_Bcast(&text_length, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-  if (rank != 0) {
-    text.resize(text_length);
+  if (text_length == 0) {
+    GetOutput() = 0;
+    return true;
   }
-  MPI_Bcast(text.data(), text_length, MPI_CHAR, 0, MPI_COMM_WORLD);
 
-  int chunk_size = text_length / size;
-  int remainder = text_length % size;
+  int base_chunk_size = text_length / size;
+  int remaining_chars = text_length % size;
 
-  int start = rank * chunk_size + std::min(rank, remainder);
-  int end = (rank + 1) * chunk_size + std::min(rank + 1, remainder);
-  end = std::min(end, text_length);
+  std::vector<int> chunk_sizes(size);
+  std::vector<int> displacements(size);
 
-  int local_count = 0;
-  bool in_sentence_end = false;
+  int current_displacement = 0;
+  for (int i = 0; i < size; ++i) {
+    chunk_sizes[i] = base_chunk_size + (i < remaining_chars ? 1 : 0);
+    displacements[i] = current_displacement;
+    current_displacement += chunk_sizes[i];
+  }
 
-  for (int i = start; i < end; i++) {
-    char c = text[i];
-    if (c == '.' || c == '!' || c == '?') {
-      if (!in_sentence_end) {
-        local_count++;
-        in_sentence_end = true;
-      }
-    } else {
-      in_sentence_end = false;
+  int local_chunk_size = chunk_sizes[rank];
+  std::string local_chunk(local_chunk_size, '\0');
+
+  MPI_Scatterv(rank == 0 ? full_text.data() : nullptr, chunk_sizes.data(), displacements.data(), MPI_CHAR,
+               local_chunk.data(), local_chunk_size, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+  std::vector<char> boundary_chars(size);
+  if (rank == 0) {
+    for (int i = 0; i < size; ++i) {
+      int chunk_start = displacements[i];
+      boundary_chars[i] = (chunk_start > 0) ? full_text[chunk_start - 1] : '\0';
     }
   }
 
-  bool ends_with_punct = false;
-  if (end > start) {
-    char last_char = text[end - 1];
-    ends_with_punct = (last_char == '.' || last_char == '!' || last_char == '?');
-  }
+  char previous_char = '\0';
+  MPI_Scatter(boundary_chars.data(), 1, MPI_CHAR, &previous_char, 1, MPI_CHAR, 0, MPI_COMM_WORLD);
 
-  bool *all_ends_with_punct = nullptr;
-  bool *all_starts_after_punct = nullptr;
+  int local_sentence_count = ProcessTextSegment(local_chunk, previous_char);
 
-  if (rank == 0) {
-    all_ends_with_punct = new bool[size];
-    all_starts_after_punct = new bool[size];
-  }
+  int total_sentences = 0;
+  MPI_Reduce(&local_sentence_count, &total_sentences, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-  MPI_Gather(&ends_with_punct, 1, MPI_C_BOOL, all_ends_with_punct, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&total_sentences, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-  bool starts_after_punct = false;
-  if (start > 0) {
-    char prev_char = text[start - 1];
-    starts_after_punct = (prev_char == '.' || prev_char == '!' || prev_char == '?');
-  }
-
-  MPI_Gather(&starts_after_punct, 1, MPI_C_BOOL, all_starts_after_punct, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
-
-  int global_count = 0;
-  MPI_Reduce(&local_count, &global_count, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-  if (rank == 0) {
-    for (int i = 1; i < size; i++) {
-      if (all_ends_with_punct[i - 1] && all_starts_after_punct[i]) {
-        global_count--;
-      }
-    }
-
-    delete[] all_ends_with_punct;
-    delete[] all_starts_after_punct;
-  }
-
-  MPI_Bcast(&global_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-  GetOutput() = global_count;
+  GetOutput() = total_sentences;
   return true;
 }
 
