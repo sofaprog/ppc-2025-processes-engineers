@@ -2,7 +2,6 @@
 
 #include <mpi.h>
 
-#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -28,38 +27,38 @@ bool SentencesCounterMPI::IsSentenceEnding(char character) {
   return character == '.' || character == '!' || character == '?';
 }
 
-int SentencesCounterMPI::SkipRepeatedPunctuation(const std::string &text, int current_position) {
-  int position = current_position;
-  while (position < static_cast<int>(text.length()) && IsSentenceEnding(text[position])) {
+int SentencesCounterMPI::SkipRepeatedPunctuation(const std::string& text, int current_position) {
+  size_t position = static_cast<size_t>(current_position);
+  while (position < text.length() && IsSentenceEnding(text[position])) {
     position++;
   }
-  return position;
+  return static_cast<int>(position);
 }
 
-int SentencesCounterMPI::ProcessTextSegment(const std::string &text_segment, char previous_char) {
+int SentencesCounterMPI::ProcessTextSegment(const std::string& text_segment, char previous_char) {
   int sentence_count = 0;
-  int index = 0;
-  const int segment_length = static_cast<int>(text_segment.length());
-
+  size_t index = 0;
+  const size_t segment_length = text_segment.length();
+  
   if (segment_length > 0) {
     char first_char = text_segment[0];
-
+    
     if (IsSentenceEnding(previous_char) && IsSentenceEnding(first_char)) {
-      index = SkipRepeatedPunctuation(text_segment, 0);
+      index = static_cast<size_t>(SkipRepeatedPunctuation(text_segment, 0));
     }
   }
-
+  
   while (index < segment_length) {
     char current_char = text_segment[index];
-
+    
     if (IsSentenceEnding(current_char)) {
       sentence_count++;
-      index = SkipRepeatedPunctuation(text_segment, index + 1);
+      index = static_cast<size_t>(SkipRepeatedPunctuation(text_segment, static_cast<int>(index + 1)));
     } else {
       index++;
     }
   }
-
+  
   return sentence_count;
 }
 
@@ -98,21 +97,40 @@ bool SentencesCounterMPI::RunImpl() {
   }
 
   int local_chunk_size = chunk_sizes[rank];
-  std::string local_chunk(local_chunk_size, '\0');
+  std::string local_chunk(static_cast<size_t>(local_chunk_size), '\0');
 
-  MPI_Scatterv(rank == 0 ? full_text.data() : nullptr, chunk_sizes.data(), displacements.data(), MPI_CHAR,
-               local_chunk.data(), local_chunk_size, MPI_CHAR, 0, MPI_COMM_WORLD);
+  MPI_Scatterv(
+      rank == 0 ? full_text.data() : nullptr, 
+      chunk_sizes.data(),                      
+      displacements.data(),                    
+      MPI_CHAR,                             
+      local_chunk.data(),                     
+      local_chunk_size,                        
+      MPI_CHAR,                                
+      0,                                       
+      MPI_COMM_WORLD                          
+  );
 
-  std::vector<char> boundary_chars(size);
+
+  std::vector<char> boundary_chars(static_cast<size_t>(size));
   if (rank == 0) {
     for (int i = 0; i < size; ++i) {
       int chunk_start = displacements[i];
-      boundary_chars[i] = (chunk_start > 0) ? full_text[chunk_start - 1] : '\0';
+      boundary_chars[static_cast<size_t>(i)] = (chunk_start > 0) ? full_text[static_cast<size_t>(chunk_start - 1)] : '\0';
     }
   }
 
   char previous_char = '\0';
-  MPI_Scatter(boundary_chars.data(), 1, MPI_CHAR, &previous_char, 1, MPI_CHAR, 0, MPI_COMM_WORLD);
+  MPI_Scatter(
+      boundary_chars.data(),  
+      1,                      
+      MPI_CHAR,             
+      &previous_char,         
+      1,                      
+      MPI_CHAR,             
+      0,                     
+      MPI_COMM_WORLD         
+  );
 
   int local_sentence_count = ProcessTextSegment(local_chunk, previous_char);
 

@@ -66,7 +66,7 @@ TEST_P(MakoveevaSNumberOfSentenceRunFuncTestsProcesses, CountSentences) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 24> kTestParam = {std::make_tuple("Hello world.", "1"),
+const std::array<TestType, 33> kTestParam = {std::make_tuple("Hello world.", "1"),
                                              std::make_tuple("Hello! How are you?", "2"),
                                              std::make_tuple("This is a test. Another sentence! And one more?", "3"),
                                              std::make_tuple("", "0"),
@@ -89,7 +89,17 @@ const std::array<TestType, 24> kTestParam = {std::make_tuple("Hello world.", "1"
                                              std::make_tuple("abc..def.", "2"),
                                              std::make_tuple("abc...def.", "2"),
                                              std::make_tuple("abc!!!def.", "2"),
-                                             std::make_tuple("abc.!?def.", "2")};
+                                             std::make_tuple("abc.!?def.", "2"),
+                                            std::make_tuple("...", "1"),         
+                                            std::make_tuple("!!!", "1"),  
+                                            std::make_tuple("???", "1"),
+                                            std::make_tuple(".!?", "1"),
+                                            std::make_tuple("..!!??", "1"),
+                                            std::make_tuple("a.b!c?d.", "4"),
+                                            std::make_tuple(".a.!b.?c.", "4"),
+                                            std::make_tuple("..test..", "1"), 
+                                            std::make_tuple("!hello!world!", "3") 
+                                            };
 
 #ifndef PPC_SETTINGS_makoveeva_s_number_of_sentence
 #  define PPC_SETTINGS_makoveeva_s_number_of_sentence "makoveeva_s_number_of_sentence"
