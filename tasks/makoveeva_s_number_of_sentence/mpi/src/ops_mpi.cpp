@@ -2,6 +2,7 @@
 
 #include <mpi.h>
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -28,7 +29,7 @@ bool SentencesCounterMPI::IsSentenceEnding(char character) {
 }
 
 int SentencesCounterMPI::SkipRepeatedPunctuation(const std::string &text, int current_position) {
-  size_t position = static_cast<size_t>(current_position);
+  auto position = static_cast<std::size_t>(current_position);
   while (position < text.length() && IsSentenceEnding(text[position])) {
     position++;
   }
@@ -37,14 +38,14 @@ int SentencesCounterMPI::SkipRepeatedPunctuation(const std::string &text, int cu
 
 int SentencesCounterMPI::ProcessTextSegment(const std::string &text_segment, char previous_char) {
   int sentence_count = 0;
-  size_t index = 0;
-  const size_t segment_length = text_segment.length();
+  std::size_t index = 0;
+  const auto segment_length = text_segment.length();
 
   if (segment_length > 0) {
     char first_char = text_segment[0];
 
     if (IsSentenceEnding(previous_char) && IsSentenceEnding(first_char)) {
-      index = static_cast<size_t>(SkipRepeatedPunctuation(text_segment, 0));
+      index = static_cast<std::size_t>(SkipRepeatedPunctuation(text_segment, 0));
     }
   }
 
@@ -53,7 +54,7 @@ int SentencesCounterMPI::ProcessTextSegment(const std::string &text_segment, cha
 
     if (IsSentenceEnding(current_char)) {
       sentence_count++;
-      index = static_cast<size_t>(SkipRepeatedPunctuation(text_segment, static_cast<int>(index + 1)));
+      index = static_cast<std::size_t>(SkipRepeatedPunctuation(text_segment, static_cast<int>(index + 1)));
     } else {
       index++;
     }
@@ -86,28 +87,28 @@ bool SentencesCounterMPI::RunImpl() {
   int base_chunk_size = text_length / size;
   int remaining_chars = text_length % size;
 
-  std::vector<int> chunk_sizes(size);
-  std::vector<int> displacements(size);
+  std::vector<int> chunk_sizes(static_cast<std::size_t>(size));
+  std::vector<int> displacements(static_cast<std::size_t>(size));
 
   int current_displacement = 0;
   for (int i = 0; i < size; ++i) {
-    chunk_sizes[i] = base_chunk_size + (i < remaining_chars ? 1 : 0);
-    displacements[i] = current_displacement;
-    current_displacement += chunk_sizes[i];
+    chunk_sizes[static_cast<std::size_t>(i)] = base_chunk_size + (i < remaining_chars ? 1 : 0);
+    displacements[static_cast<std::size_t>(i)] = current_displacement;
+    current_displacement += chunk_sizes[static_cast<std::size_t>(i)];
   }
 
-  int local_chunk_size = chunk_sizes[rank];
-  std::string local_chunk(static_cast<size_t>(local_chunk_size), '\0');
+  int local_chunk_size = chunk_sizes[static_cast<std::size_t>(rank)];
+  std::string local_chunk(static_cast<std::size_t>(local_chunk_size), '\0');
 
   MPI_Scatterv(rank == 0 ? full_text.data() : nullptr, chunk_sizes.data(), displacements.data(), MPI_CHAR,
                local_chunk.data(), local_chunk_size, MPI_CHAR, 0, MPI_COMM_WORLD);
 
-  std::vector<char> boundary_chars(static_cast<size_t>(size));
+  std::vector<char> boundary_chars(static_cast<std::size_t>(size));
   if (rank == 0) {
     for (int i = 0; i < size; ++i) {
-      int chunk_start = displacements[i];
-      boundary_chars[static_cast<size_t>(i)] =
-          (chunk_start > 0) ? full_text[static_cast<size_t>(chunk_start - 1)] : '\0';
+      int chunk_start = displacements[static_cast<std::size_t>(i)];
+      boundary_chars[static_cast<std::size_t>(i)] =
+          (chunk_start > 0) ? full_text[static_cast<std::size_t>(chunk_start - 1)] : '\0';
     }
   }
 
