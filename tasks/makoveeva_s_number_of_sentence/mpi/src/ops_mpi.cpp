@@ -68,7 +68,12 @@ bool SentencesCounterMPI::RunImpl() {
   int size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
-
+  if (rank == 0) {
+    std::cout << "=== MPI DEBUG: Testing 'a.b.c...z' ===" << std::endl;
+    std::cout << "Full text: '" << GetInput() << "'" << std::endl;
+    std::cout << "Text length: " << GetInput().length() << std::endl;
+    std::cout << "Number of processes: " << size << std::endl;
+  }
   std::string full_text;
   int text_length = 0;
 
@@ -123,6 +128,11 @@ bool SentencesCounterMPI::RunImpl() {
   MPI_Bcast(&total_sentences, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
   GetOutput() = total_sentences;
+  if (rank == 0) {
+    std::cout << "Final result: " << total_sentences << std::endl;
+    std::cout << "Expected: 26" << std::endl;
+    std::cout << "=== END DEBUG ===" << std::endl;
+  }
   return true;
 }
 
