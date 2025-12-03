@@ -93,7 +93,7 @@ const std::array<TestType, 27> kTestParam = {
     std::make_tuple("abc.!?def.", "2"),
     std::make_tuple(".", "1"),
     std::make_tuple(" . ", "1"),
-    std::make_tuple("a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.w.", "26"),
+    std::make_tuple("a.b.c.d.e.f.g.h.i.j.l.l.m.n.o.p.q.r.s.t.u.v.w.x.y.w.", "26"),
 };
 
 #ifndef PPC_SETTINGS_makoveeva_s_number_of_sentence
