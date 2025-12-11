@@ -71,7 +71,7 @@ const std::array<TestType, 27> kTestParam = {
     std::make_tuple("Hello! How are you?", "2"),
     std::make_tuple("This is a test. Another sentence! And one more?", "3"),
     std::make_tuple("", "0"),
-    std::make_tuple("No sentences here", "0"),
+    std::make_tuple("Na sentences here", "0"),
     std::make_tuple("One. Two. Three.", "3"),
     std::make_tuple("Multiple punctuation...!!!", "1"),
     std::make_tuple("Mix. Of! Different? Endings.", "4"),
