@@ -43,25 +43,16 @@ TEST_P(MakoveevaSSimpleIterationFuncTests, SimpleIterationTest) {
   ExecuteTest(GetParam());
 }
 
-const std::array<TestType, 10> kTestParam = {
-    std::make_tuple(1, "size_1"),
-    std::make_tuple(2, "size_2"),
-    std::make_tuple(3, "size_3"),
-    std::make_tuple(5, "size_5"),
-    std::make_tuple(7, "size_7"),
-    std::make_tuple(10, "size_10"),
-    std::make_tuple(15, "size_15"),
-    std::make_tuple(20, "size_20"),
-    std::make_tuple(30, "size_30"),
-    std::make_tuple(50, "size_50")
-};
+const std::array<TestType, 10> kTestParam = {std::make_tuple(1, "size_1"),   std::make_tuple(2, "size_2"),
+                                             std::make_tuple(3, "size_3"),   std::make_tuple(5, "size_5"),
+                                             std::make_tuple(7, "size_7"),   std::make_tuple(10, "size_10"),
+                                             std::make_tuple(15, "size_15"), std::make_tuple(20, "size_20"),
+                                             std::make_tuple(30, "size_30"), std::make_tuple(50, "size_50")};
 
 const auto kTestTasksList = std::tuple_cat(
-    ppc::util::AddFuncTask<MakoveevaSSimpleIterationMPI, InType>(
-        kTestParam, PPC_SETTINGS_makoveeva_s_simple_iteration),
-    ppc::util::AddFuncTask<MakoveevaSSimpleIterationSEQ, InType>(
-        kTestParam, PPC_SETTINGS_makoveeva_s_simple_iteration)
-);
+    ppc::util::AddFuncTask<MakoveevaSSimpleIterationMPI, InType>(kTestParam, PPC_SETTINGS_makoveeva_s_simple_iteration),
+    ppc::util::AddFuncTask<MakoveevaSSimpleIterationSEQ, InType>(kTestParam,
+                                                                 PPC_SETTINGS_makoveeva_s_simple_iteration));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
@@ -96,7 +87,7 @@ TEST(MakoveevaSSimpleIterationEdgeCases, FullExecutionSEQ) {
   EXPECT_TRUE(task.PreProcessing());
   EXPECT_TRUE(task.Run());
   EXPECT_TRUE(task.PostProcessing());
-  EXPECT_GT(task.GetOutput(), 0); 
+  EXPECT_GT(task.GetOutput(), 0);
 }
 
 TEST(MakoveevaSSimpleIterationEdgeCases, InvalidInputZeroMPI) {

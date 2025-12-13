@@ -10,7 +10,7 @@ class MakoveevaSSimpleIterationMPI : public BaseTask {
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
     return ppc::task::TypeOfTask::kMPI;
   }
-  
+
   explicit MakoveevaSSimpleIterationMPI(const InType &in);
 
  private:

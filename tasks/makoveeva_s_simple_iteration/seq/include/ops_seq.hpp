@@ -12,7 +12,7 @@ class MakoveevaSSimpleIterationSEQ : public BaseTask {
   static constexpr ppc::task::TypeOfTask GetStaticTypeOfTask() {
     return ppc::task::TypeOfTask::kSEQ;
   }
-  
+
   explicit MakoveevaSSimpleIterationSEQ(const InType &in);
 
  private:
