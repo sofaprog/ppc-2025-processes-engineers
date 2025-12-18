@@ -1,7 +1,7 @@
 #include "makoveeva_s_simple_iteration/seq/include/ops_seq.hpp"
 
-#include <cstddef>
 #include <cmath>
+#include <cstddef>
 #include <vector>
 
 #include "makoveeva_s_simple_iteration/common/include/common.hpp"
@@ -13,7 +13,6 @@ constexpr double kW = 0.5;
 constexpr double kEps = 1e-6;
 constexpr int kMaxIter = 1000;
 }  // namespace
-
 
 MakoveevaSSimpleIterationSEQ::MakoveevaSSimpleIterationSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
@@ -39,9 +38,9 @@ bool MakoveevaSSimpleIterationSEQ::RunImpl() {
   for (int i = 0; i < n; ++i) {
     const auto i_idx = static_cast<size_t>(i);
     const auto n_idx = static_cast<size_t>(n);
-    
+
     a[(i_idx * n_idx) + i_idx] = static_cast<double>(n) + 5.0;
-    
+
     for (int j = 0; j < n; ++j) {
       if (i != j) {
         const auto j_idx = static_cast<size_t>(j);
@@ -67,7 +66,7 @@ bool MakoveevaSSimpleIterationSEQ::RunImpl() {
     for (int i = 0; i < n; ++i) {
       const auto i_idx = static_cast<size_t>(i);
       const auto n_idx = static_cast<size_t>(n);
-      
+
       double sum = 0.0;
       for (int j = 0; j < n; ++j) {
         const auto j_idx = static_cast<size_t>(j);
