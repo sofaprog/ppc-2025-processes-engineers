@@ -12,4 +12,6 @@ using OutType = int;
 using TestType = std::tuple<int, std::string>;
 using BaseTask = ppc::task::Task<InType, OutType>;
 
+using TypeOfTask = ppc::task::TypeOfTask;
+
 }  // namespace makoveeva_s_simple_iteration

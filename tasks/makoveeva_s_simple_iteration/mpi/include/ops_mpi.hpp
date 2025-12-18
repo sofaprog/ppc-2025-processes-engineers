@@ -2,6 +2,7 @@
 #define TASKS_MAKOVEEVA_S_SIMPLE_ITERATION_MPI_INCLUDE_OPS_MPI_HPP_
 
 #include "makoveeva_s_simple_iteration/common/include/common.hpp"
+#include "task/include/task.hpp"  // direct include for ppc::task::TypeOfTask
 
 namespace makoveeva_s_simple_iteration {
 
@@ -16,7 +17,7 @@ class MakoveevaSSimpleIterationMPI : public BaseTask {
  private:
   bool ValidationImpl() override;
   bool PreProcessingImpl() override;
-  bool RunImpl() override;
+  bool RunImpl() override;  // RunImpl будет "тонким", логика в ops_mpi.cpp helpers
   bool PostProcessingImpl() override;
 };
 

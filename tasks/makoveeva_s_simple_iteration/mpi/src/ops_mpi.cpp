@@ -2,12 +2,10 @@
 
 #include <mpi.h>
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <cstdlib>
 #include <vector>
-
-#include "makoveeva_s_simple_iteration/common/include/common.hpp"
 
 namespace makoveeva_s_simple_iteration {
 
