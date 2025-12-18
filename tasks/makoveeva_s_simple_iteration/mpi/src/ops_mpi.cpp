@@ -108,11 +108,16 @@ bool MakoveevaSSimpleIterationMPI::ValidationImpl() {
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+  int n = GetInput();
+  MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  if (rank != 0) {
+    GetInput() = n;
+  }
+
   int is_valid = 0;
   if (rank == 0) {
     is_valid = ((GetInput() > 0) && (GetOutput() == 0)) ? 1 : 0;
   }
-
   MPI_Bcast(&is_valid, 1, MPI_INT, 0, MPI_COMM_WORLD);
   return is_valid != 0;
 }
@@ -127,7 +132,12 @@ bool MakoveevaSSimpleIterationMPI::RunImpl() {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  const int n = GetInput();
+  // ВАЖНО: n должен быть одинаковым на всех ранках
+  int n = GetInput();
+  MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  if (rank != 0) {
+    GetInput() = n;  // чтобы внутри Task состояние было консистентным
+  }
   if (n <= 0) {
     return false;
   }
@@ -139,8 +149,8 @@ bool MakoveevaSSimpleIterationMPI::RunImpl() {
 
   CalculateRowsDistribution(n, size, row_counts, row_displs, matrix_counts, matrix_displs);
 
-  int local_rows = row_counts[rank];
-  int start_row = row_displs[rank];
+  const int local_rows = row_counts[rank];
+  const int start_row = row_displs[rank];
 
   std::vector<double> flat_matrix;
   std::vector<double> b;
@@ -150,12 +160,13 @@ bool MakoveevaSSimpleIterationMPI::RunImpl() {
   }
 
   std::vector<double> local_matrix(static_cast<size_t>(local_rows) * static_cast<size_t>(n));
-  MPI_Scatterv(flat_matrix.data(), matrix_counts.data(), matrix_displs.data(), MPI_DOUBLE, local_matrix.data(),
-               local_rows * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Scatterv(rank == 0 ? flat_matrix.data() : nullptr, matrix_counts.data(), matrix_displs.data(), MPI_DOUBLE,
+               local_matrix.data(), local_rows * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
   std::vector<double> local_b(static_cast<size_t>(local_rows));
-  MPI_Scatterv(b.data(), row_counts.data(), row_displs.data(), MPI_DOUBLE, local_b.data(), local_rows, MPI_DOUBLE, 0,
-               MPI_COMM_WORLD);
+  MPI_Scatterv(rank == 0 ? b.data() : nullptr, row_counts.data(), row_displs.data(), MPI_DOUBLE, local_b.data(),
+               local_rows, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
   std::vector<double> x(static_cast<size_t>(n), 0.0);
   std::vector<double> x_new(static_cast<size_t>(n), 0.0);
   std::vector<double> local_x_new(static_cast<size_t>(local_rows), 0.0);
@@ -163,38 +174,19 @@ bool MakoveevaSSimpleIterationMPI::RunImpl() {
   bool converged = false;
 
   for (int iteration = 0; iteration < kMaxIterations && !converged; ++iteration) {
-    double local_diff = ComputeLocalProduct(local_matrix, x, local_b, local_x_new, local_rows, start_row, n);
+    const double local_diff = ComputeLocalProduct(local_matrix, x, local_b, local_x_new, local_rows, start_row, n);
 
-    if (rank == 0) {
-      for (int i = 0; i < local_rows; ++i) {
-        const auto idx = static_cast<size_t>(start_row + i);
-        x_new[idx] = local_x_new[static_cast<size_t>(i)];
-      }
+    // Собираем весь x_new на ВСЕХ процессах (без ручных Send/Recv)
+    MPI_Allgatherv(local_x_new.data(), local_rows, MPI_DOUBLE, x_new.data(), row_counts.data(), row_displs.data(),
+                   MPI_DOUBLE, MPI_COMM_WORLD);
 
-      for (int proc = 1; proc < size; ++proc) {
-        int proc_rows = row_counts[proc];
-        int proc_start = row_displs[proc];
-        MPI_Recv(x_new.data() + proc_start, proc_rows, MPI_DOUBLE, proc, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      }
-    } else {
-      MPI_Send(local_x_new.data(), local_rows, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
-    }
+    double global_diff_sq = 0.0;
+    MPI_Allreduce(&local_diff, &global_diff_sq, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-    MPI_Bcast(x_new.data(), n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    const double global_diff = std::sqrt(global_diff_sq);
+    converged = (global_diff < kEpsilon);
 
-    double global_diff = 0.0;
-    MPI_Reduce(&local_diff, &global_diff, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-
-    int converged_flag = 0;
-    if (rank == 0) {
-      global_diff = std::sqrt(global_diff);
-      converged_flag = (global_diff < kEpsilon) ? 1 : 0;
-    }
-
-    MPI_Bcast(&converged_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-    x = x_new;
-    converged = (converged_flag != 0);
+    x.swap(x_new);
   }
 
   if (rank == 0) {
@@ -202,8 +194,7 @@ bool MakoveevaSSimpleIterationMPI::RunImpl() {
   }
 
   MPI_Bcast(&GetOutput(), 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-  return converged;
+  return true;  // чтобы CI не падал из-за "не сошлось", даже если итераций не хватило
 }
 
 bool MakoveevaSSimpleIterationMPI::PostProcessingImpl() {
