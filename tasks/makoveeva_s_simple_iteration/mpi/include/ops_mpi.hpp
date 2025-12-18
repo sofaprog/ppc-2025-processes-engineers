@@ -1,7 +1,8 @@
-#pragma once
+#ifndef TASKS_MAKOVEEVA_S_SIMPLE_ITERATION_MPI_INCLUDE_OPS_MPI_HPP_
+#define TASKS_MAKOVEEVA_S_SIMPLE_ITERATION_MPI_INCLUDE_OPS_MPI_HPP_
 
 #include "makoveeva_s_simple_iteration/common/include/common.hpp"
-#include "task/include/task.hpp"
+
 namespace makoveeva_s_simple_iteration {
 
 class MakoveevaSSimpleIterationMPI : public BaseTask {
@@ -20,3 +21,5 @@ class MakoveevaSSimpleIterationMPI : public BaseTask {
 };
 
 }  // namespace makoveeva_s_simple_iteration
+
+#endif  // TASKS_MAKOVEEVA_S_SIMPLE_ITERATION_MPI_INCLUDE_OPS_MPI_HPP_
