@@ -3,22 +3,115 @@
 #include <mpi.h>
 
 #include <cmath>
-#include <iostream>
 #include <vector>
 
 #include "makoveeva_s_simple_iteration/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace makoveeva_s_simple_iteration {
+
+namespace {
+constexpr double kRelaxationFactor = 0.5;
+constexpr double kEpsilon = 1e-6;
+constexpr int kMaxIterations = 1000;
+
+void CalculateRowsDistribution(int n, int size, std::vector<int>& row_counts,
+                               std::vector<int>& row_displs,
+                               std::vector<int>& matrix_counts,
+                               std::vector<int>& matrix_displs) {
+  int row_offset = 0;
+  int matrix_offset = 0;
+  for (int proc = 0; proc < size; ++proc) {
+    int base_rows = n / size;
+    int extra = (proc < (n % size)) ? 1 : 0;
+    int proc_rows = base_rows + extra;
+
+    row_counts[proc] = proc_rows;
+    row_displs[proc] = row_offset;
+    matrix_counts[proc] = proc_rows * n;
+    matrix_displs[proc] = matrix_offset;
+
+    row_offset += proc_rows;
+    matrix_offset += proc_rows * n;
+  }
+}
+
+void InitializeMatrixAndVector(std::vector<double>& flat_matrix,
+                               std::vector<double>& b, int n) {
+  const size_t matrix_size = static_cast<size_t>(n) * static_cast<size_t>(n);
+  flat_matrix.resize(matrix_size, 0.0);
+  b.resize(static_cast<size_t>(n), 0.0);
+
+  for (int i = 0; i < n; ++i) {
+    const size_t i_idx = static_cast<size_t>(i);
+    const size_t n_idx = static_cast<size_t>(n);
+    
+    flat_matrix[i_idx * n_idx + i_idx] = static_cast<double>(n) + 5.0;
+    
+    for (int j = 0; j < n; ++j) {
+      if (i != j) {
+        const size_t j_idx = static_cast<size_t>(j);
+        flat_matrix[i_idx * n_idx + j_idx] = 
+            1.0 / (static_cast<double>(std::abs(i - j)) + 1.0);
+      }
+    }
+
+    for (int j = 0; j < n; ++j) {
+      const size_t j_idx = static_cast<size_t>(j);
+      b[i_idx] += flat_matrix[i_idx * n_idx + j_idx] * 
+                  static_cast<double>(j + 1);
+    }
+  }
+}
+
+double ComputeLocalProduct(const std::vector<double>& local_matrix,
+                          const std::vector<double>& x,
+                          const std::vector<double>& local_b,
+                          std::vector<double>& local_x_new, int local_rows,
+                          int start_row, int n) {
+  double local_diff = 0.0;
+  
+  for (int i = 0; i < local_rows; ++i) {
+    const size_t i_idx = static_cast<size_t>(i);
+    const size_t n_idx = static_cast<size_t>(n);
+    
+    double sum = 0.0;
+    for (int j = 0; j < n; ++j) {
+      const size_t j_idx = static_cast<size_t>(j);
+      sum += local_matrix[i_idx * n_idx + j_idx] * x[j_idx];
+    }
+
+    const int global_i = start_row + i;
+    const size_t global_idx = static_cast<size_t>(global_i);
+    
+    local_x_new[i_idx] = x[global_idx] + kRelaxationFactor * 
+                        (local_b[i_idx] - sum) / 
+                        local_matrix[i_idx * n_idx + global_idx];
+    
+    double diff = local_x_new[i_idx] - x[global_idx];
+    local_diff += diff * diff;
+  }
+  
+  return local_diff;
+}
+
+int ComputeFinalResult(const std::vector<double>& x, int n) {
+  double sum = 0.0;
+  for (int i = 0; i < n; ++i) {
+    sum += x[static_cast<size_t>(i)];
+  }
+  return static_cast<int>(std::round(sum));
+}
+
+}  // namespace
 
 MakoveevaSSimpleIterationMPI::MakoveevaSSimpleIterationMPI(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
-  GetOutput() = 0;  // int, а не vector!
+  GetOutput() = 0;
 }
 
 bool MakoveevaSSimpleIterationMPI::ValidationImpl() {
-  int rank;
+  int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   int is_valid = 0;
@@ -35,150 +128,98 @@ bool MakoveevaSSimpleIterationMPI::PreProcessingImpl() {
 }
 
 bool MakoveevaSSimpleIterationMPI::RunImpl() {
-  int rank, size;
+  int rank = 0;
+  int size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  int n = GetInput();  // Размер системы
-
+  int n = GetInput();
   if (n <= 0) {
     return false;
   }
 
-  // Главный процесс создаёт тестовую систему
-  std::vector<double> A_flat;
+  std::vector<int> row_counts(static_cast<size_t>(size));
+  std::vector<int> row_displs(static_cast<size_t>(size));
+  std::vector<int> matrix_counts(static_cast<size_t>(size));
+  std::vector<int> matrix_displs(static_cast<size_t>(size));
+  
+  CalculateRowsDistribution(n, size, row_counts, row_displs, 
+                           matrix_counts, matrix_displs);
+  
+  int local_rows = row_counts[rank];
+  int start_row = row_displs[rank];
+
+  std::vector<double> flat_matrix;
   std::vector<double> b;
-
+  
   if (rank == 0) {
-    // Создаём матрицу A и вектор b
-    A_flat.resize(n * n, 0.0);
-    b.resize(n, 0.0);
-
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < n; j++) {
-        if (i == j) {
-          A_flat[i * n + j] = n + 5.0;
-        } else {
-          A_flat[i * n + j] = 1.0 / (std::abs(i - j) + 1.0);
-        }
-      }
-
-      // Генерируем правую часть
-      for (int j = 0; j < n; j++) {
-        b[i] += A_flat[i * n + j] * (j + 1.0);
-      }
-    }
+    InitializeMatrixAndVector(flat_matrix, b, n);
   }
 
-  // Рассылаем размер системы
-  MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  std::vector<double> local_matrix(static_cast<size_t>(local_rows) * 
+                                   static_cast<size_t>(n));
+  MPI_Scatterv(flat_matrix.data(), matrix_counts.data(), matrix_displs.data(),
+               MPI_DOUBLE, local_matrix.data(), local_rows * n,
+               MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  
+  std::vector<double> local_b(static_cast<size_t>(local_rows));
+  MPI_Scatterv(b.data(), row_counts.data(), row_displs.data(),
+               MPI_DOUBLE, local_b.data(), local_rows,
+               MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-  // Выделяем память в остальных процессах
-  if (rank != 0) {
-    A_flat.resize(n * n);
-    b.resize(n);
-  }
+  std::vector<double> x(static_cast<size_t>(n), 0.0);
+  std::vector<double> x_new(static_cast<size_t>(n), 0.0);
+  std::vector<double> local_x_new(static_cast<size_t>(local_rows), 0.0);
 
-  // Рассылаем данные
-  MPI_Bcast(A_flat.data(), n * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  MPI_Bcast(b.data(), n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-  // Параметры метода
-  const double w = 0.5;
-  const double eps = 1e-6;
-  const int max_iter = 1000;
-
-  // Распределяем строки по процессам
-  int rows_per_proc = n / size;
-  int extra_rows = n % size;
-
-  int start_row = rank * rows_per_proc + std::min(rank, extra_rows);
-  int end_row = start_row + rows_per_proc + (rank < extra_rows ? 1 : 0);
-  int my_rows = end_row - start_row;
-
-  // Начальное приближение
-  std::vector<double> x(n, 0.0);
-  std::vector<double> x_new(n, 0.0);
-  std::vector<double> my_x_new(my_rows, 0.0);
-
-  int iter = 0;
-  bool converged = false;
-
-  while (iter < max_iter && !converged) {
-    // Каждый процесс вычисляет свои строки
-    for (int local_i = 0; local_i < my_rows; local_i++) {
-      int global_i = start_row + local_i;
-
-      double sum = 0.0;
-      for (int j = 0; j < n; j++) {
-        sum += A_flat[global_i * n + j] * x[j];
+  for (int iteration = 0; iteration < kMaxIterations; ++iteration) {
+    double local_diff = ComputeLocalProduct(local_matrix, x, local_b,
+                                           local_x_new, local_rows,
+                                           start_row, n);
+    if (rank == 0) {
+      for (int i = 0; i < local_rows; ++i) {
+        x_new[static_cast<size_t>(start_row + i)] = local_x_new[static_cast<size_t>(i)];
       }
-
-      // Формула метода простой итерации
-      my_x_new[local_i] = x[global_i] + w * (b[global_i] - sum) / A_flat[global_i * n + global_i];
+      
+      for (int proc = 1; proc < size; ++proc) {
+        int proc_rows = row_counts[proc];
+        int proc_start = row_displs[proc];
+        MPI_Recv(x_new.data() + proc_start, proc_rows,
+                 MPI_DOUBLE, proc, 0, MPI_COMM_WORLD,
+                 MPI_STATUS_IGNORE);
+      }
+    } else {
+      MPI_Send(local_x_new.data(), local_rows,
+               MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
     }
 
-    // Собираем результаты
-    std::vector<int> recv_counts(size);
-    std::vector<int> displacements(size);
+    MPI_Bcast(x_new.data(), n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-    for (int i = 0; i < size; i++) {
-      int i_rows = n / size + (i < extra_rows ? 1 : 0);
-      recv_counts[i] = i_rows;
-      displacements[i] = (i == 0) ? 0 : displacements[i - 1] + recv_counts[i - 1];
+    double global_diff = 0.0;
+    MPI_Reduce(&local_diff, &global_diff, 1, MPI_DOUBLE,
+               MPI_SUM, 0, MPI_COMM_WORLD);
+    
+    int converged = 0;
+    if (rank == 0) {
+      global_diff = std::sqrt(global_diff);
+      converged = (global_diff < kEpsilon) ? 1 : 0;
     }
-
-    MPI_Allgatherv(my_x_new.data(), my_rows, MPI_DOUBLE, x_new.data(), recv_counts.data(), displacements.data(),
-                   MPI_DOUBLE, MPI_COMM_WORLD);
-
-    // Вычисляем ошибку
-    double local_error = 0.0;
-    for (int local_i = 0; local_i < my_rows; local_i++) {
-      int global_i = start_row + local_i;
-      double diff = x_new[global_i] - x[global_i];
-      local_error += diff * diff;
-    }
-
-    double global_error = 0.0;
-    MPI_Allreduce(&local_error, &global_error, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    global_error = std::sqrt(global_error);
-
-    if (global_error < eps) {
-      converged = true;
-    }
-
+    
+    MPI_Bcast(&converged, 1, MPI_INT, 0, MPI_COMM_WORLD);
+ 
     x = x_new;
-    iter++;
-  }
-
-  // Главный процесс вычисляет и сохраняет результат
-  if (rank == 0) {
-    // Вычисляем сумму компонент решения
-    double sum = 0.0;
-    for (int i = 0; i < n; i++) {
-      sum += x[i];
+    
+    if (converged != 0) {
+      break;
     }
-
-    GetOutput() = static_cast<int>(std::round(sum));
-
-    std::cout << "MPI (n=" << n << ", processes=" << size << "): " << (converged ? "Converged" : "Not converged")
-              << " in " << iter << " iterations" << std::endl;
   }
 
-  // Рассылаем результат всем процессам
-  int result = 0;
   if (rank == 0) {
-    result = GetOutput();
-  }
-  MPI_Bcast(&result, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-  if (rank != 0) {
-    GetOutput() = result;
+    GetOutput() = ComputeFinalResult(x, n);
   }
 
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Bcast(&GetOutput(), 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-  return converged;
+  return true;
 }
 
 bool MakoveevaSSimpleIterationMPI::PostProcessingImpl() {

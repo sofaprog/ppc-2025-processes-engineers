@@ -7,8 +7,8 @@
 
 namespace makoveeva_s_simple_iteration {
 
-using InType = int;   // Размер системы n (как у одногруппника)
-using OutType = int;  // Результат - сумма компонент решения
+using InType = int;
+using OutType = int;
 using TestType = std::tuple<int, std::string>;
 using BaseTask = ppc::task::Task<InType, OutType>;
 

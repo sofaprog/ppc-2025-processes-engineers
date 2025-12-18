@@ -1,8 +1,7 @@
 #pragma once
 
-// ВАЖНО: Только один include
 #include "makoveeva_s_simple_iteration/common/include/common.hpp"
-
+#include "task/include/task.hpp"
 namespace makoveeva_s_simple_iteration {
 
 class MakoveevaSSimpleIterationMPI : public BaseTask {

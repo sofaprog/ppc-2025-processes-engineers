@@ -1,9 +1,7 @@
 #pragma once
 
-// ВАЖНО: Сначала включаем common.hpp, а потом task.hpp
 #include "makoveeva_s_simple_iteration/common/include/common.hpp"
-// Убери лишний include task.hpp, если он уже есть в common.hpp
-// #include "task/include/task.hpp"  // УБРАТЬ, если BaseTask уже определён в common.hpp
+#include "task/include/task.hpp" 
 
 namespace makoveeva_s_simple_iteration {
 

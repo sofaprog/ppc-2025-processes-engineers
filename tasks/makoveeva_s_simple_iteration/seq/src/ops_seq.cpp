@@ -1,18 +1,16 @@
 #include "makoveeva_s_simple_iteration/seq/include/ops_seq.hpp"
 
 #include <cmath>
-#include <iostream>
 #include <vector>
 
 #include "makoveeva_s_simple_iteration/common/include/common.hpp"
-#include "util/include/util.hpp"
 
 namespace makoveeva_s_simple_iteration {
 
 MakoveevaSSimpleIterationSEQ::MakoveevaSSimpleIterationSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
-  GetOutput() = 0;  // int, а не vector!
+  GetOutput() = 0;
 }
 
 bool MakoveevaSSimpleIterationSEQ::ValidationImpl() {
@@ -24,35 +22,37 @@ bool MakoveevaSSimpleIterationSEQ::PreProcessingImpl() {
 }
 
 bool MakoveevaSSimpleIterationSEQ::RunImpl() {
-  int n = GetInput();  // Размер системы
+  int n = GetInput();
 
-  // 1. СОЗДАЁМ РЕАЛЬНУЮ СИСТЕМУ
-  std::vector<std::vector<double>> A(n, std::vector<double>(n, 0.0));
+  const size_t matrix_size = static_cast<size_t>(n) * static_cast<size_t>(n);
+  std::vector<double> A(matrix_size, 0.0);
   std::vector<double> b(n, 0.0);
 
-  // Заполняем диагонально доминантную матрицу
-  for (int i = 0; i < n; i++) {
-    A[i][i] = n + 5.0;  // Большой диагональный элемент
-
-    for (int j = 0; j < n; j++) {
+  for (int i = 0; i < n; ++i) {
+    const size_t i_idx = static_cast<size_t>(i);
+    const size_t n_idx = static_cast<size_t>(n);
+    
+    A[i_idx * n_idx + i_idx] = static_cast<double>(n) + 5.0;
+    
+    for (int j = 0; j < n; ++j) {
       if (i != j) {
-        A[i][j] = 1.0 / (std::abs(i - j) + 1.0);
+        const size_t j_idx = static_cast<size_t>(j);
+        A[i_idx * n_idx + j_idx] = 1.0 / (static_cast<double>(std::abs(i - j)) + 1.0);
       }
     }
 
-    // Генерируем правую часть для нетривиального решения
-    for (int j = 0; j < n; j++) {
-      b[i] += A[i][j] * (j + 1.0);  // Решение будет x_j = j+1
+    for (int j = 0; j < n; ++j) {
+      const size_t j_idx = static_cast<size_t>(j);
+      b[i_idx] += A[i_idx * n_idx + j_idx] * static_cast<double>(j + 1);
     }
   }
 
-  // 2. МЕТОД ПРОСТОЙ ИТЕРАЦИИ
-  std::vector<double> x(n, 0.0);  // Начальное приближение
+  std::vector<double> x(n, 0.0);
   std::vector<double> x_new(n, 0.0);
 
-  const double w = 0.5;  // Параметр релаксации
-  const double eps = 1e-6;
-  const int max_iter = 1000;
+  constexpr double w = 0.5;
+  constexpr double eps = 1e-6;
+  constexpr int max_iter = 1000;
 
   int iter = 0;
   bool converged = false;
@@ -60,17 +60,20 @@ bool MakoveevaSSimpleIterationSEQ::RunImpl() {
   while (iter < max_iter && !converged) {
     double error = 0.0;
 
-    for (int i = 0; i < n; i++) {
-      // Вычисляем A*x для строки i
+    for (int i = 0; i < n; ++i) {
+      const size_t i_idx = static_cast<size_t>(i);
+      const size_t n_idx = static_cast<size_t>(n);
+      
       double sum = 0.0;
-      for (int j = 0; j < n; j++) {
-        sum += A[i][j] * x[j];
+      for (int j = 0; j < n; ++j) {
+        const size_t j_idx = static_cast<size_t>(j);
+        sum += A[i_idx * n_idx + j_idx] * x[j_idx];
       }
 
-      // Формула метода простой итерации
-      x_new[i] = x[i] + w * (b[i] - sum) / A[i][i];
+      x_new[i_idx] = x[i_idx] + w * (b[i_idx] - sum) / A[i_idx * n_idx + i_idx];
 
-      error += (x_new[i] - x[i]) * (x_new[i] - x[i]);
+      const double diff = x_new[i_idx] - x[i_idx];
+      error += diff * diff;
     }
 
     error = std::sqrt(error);
@@ -78,20 +81,16 @@ bool MakoveevaSSimpleIterationSEQ::RunImpl() {
       converged = true;
     }
 
-    x = x_new;
-    iter++;
+    x.swap(x_new);
+    ++iter;
   }
 
-  // 3. ВЫЧИСЛЯЕМ РЕЗУЛЬТАТ (сумма компонент)
   double sum = 0.0;
-  for (int i = 0; i < n; i++) {
-    sum += x[i];
+  for (int i = 0; i < n; ++i) {
+    sum += x[static_cast<size_t>(i)];
   }
 
   GetOutput() = static_cast<int>(std::round(sum));
-
-  std::cout << "SEQ (n=" << n << "): " << (converged ? "Converged" : "Not converged") << " in " << iter << " iterations"
-            << std::endl;
 
   return converged;
 }
