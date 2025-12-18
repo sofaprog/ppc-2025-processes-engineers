@@ -31,9 +31,9 @@ bool MakoveevaSSimpleIterationSEQ::RunImpl() {
   for (int i = 0; i < n; ++i) {
     const size_t i_idx = static_cast<size_t>(i);
     const size_t n_idx = static_cast<size_t>(n);
-    
+
     A[i_idx * n_idx + i_idx] = static_cast<double>(n) + 5.0;
-    
+
     for (int j = 0; j < n; ++j) {
       if (i != j) {
         const size_t j_idx = static_cast<size_t>(j);
@@ -63,7 +63,7 @@ bool MakoveevaSSimpleIterationSEQ::RunImpl() {
     for (int i = 0; i < n; ++i) {
       const size_t i_idx = static_cast<size_t>(i);
       const size_t n_idx = static_cast<size_t>(n);
-      
+
       double sum = 0.0;
       for (int j = 0; j < n; ++j) {
         const size_t j_idx = static_cast<size_t>(j);

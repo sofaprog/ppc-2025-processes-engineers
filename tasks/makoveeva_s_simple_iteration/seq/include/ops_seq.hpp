@@ -1,7 +1,7 @@
 #pragma once
 
 #include "makoveeva_s_simple_iteration/common/include/common.hpp"
-#include "task/include/task.hpp" 
+#include "task/include/task.hpp"
 
 namespace makoveeva_s_simple_iteration {
 
