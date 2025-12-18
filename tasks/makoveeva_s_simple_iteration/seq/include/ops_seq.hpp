@@ -2,7 +2,7 @@
 #define TASKS_MAKOVEEVA_S_SIMPLE_ITERATION_SEQ_INCLUDE_OPS_SEQ_HPP_
 
 #include "makoveeva_s_simple_iteration/common/include/common.hpp"
-#include "task/include/task.hpp"  // direct include for ppc::task::TypeOfTask
+#include "task/include/task.hpp"
 
 namespace makoveeva_s_simple_iteration {
 
@@ -17,7 +17,7 @@ class MakoveevaSSimpleIterationSEQ : public BaseTask {
  private:
   bool ValidationImpl() override;
   bool PreProcessingImpl() override;
-  bool RunImpl() override;  // RunImpl будет "тонким", логика в ops_seq.cpp helpers
+  bool RunImpl() override;
   bool PostProcessingImpl() override;
 };
 

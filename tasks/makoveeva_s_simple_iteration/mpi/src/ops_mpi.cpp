@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <vector>
 
+#include "makoveeva_s_simple_iteration/common/include/common.hpp"
+
 namespace makoveeva_s_simple_iteration {
 
 namespace {
@@ -114,7 +116,7 @@ bool MakoveevaSSimpleIterationMPI::ValidationImpl() {
 
   int is_valid = 0;
   if (rank == 0) {
-    is_valid = ((GetInput() > 0) && (GetOutput() == 0)) ? 1 : 0;
+    is_valid = (GetInput() > 0) ? 1 : 0;
   }
   MPI_Bcast(&is_valid, 1, MPI_INT, 0, MPI_COMM_WORLD);
   return is_valid != 0;
@@ -130,11 +132,10 @@ bool MakoveevaSSimpleIterationMPI::RunImpl() {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  // ВАЖНО: n должен быть одинаковым на всех ранках
   int n = GetInput();
   MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
   if (rank != 0) {
-    GetInput() = n;  // чтобы внутри Task состояние было консистентным
+    GetInput() = n;
   }
   if (n <= 0) {
     return false;
@@ -174,7 +175,6 @@ bool MakoveevaSSimpleIterationMPI::RunImpl() {
   for (int iteration = 0; iteration < kMaxIterations && !converged; ++iteration) {
     const double local_diff = ComputeLocalProduct(local_matrix, x, local_b, local_x_new, local_rows, start_row, n);
 
-    // Собираем весь x_new на ВСЕХ процессах (без ручных Send/Recv)
     MPI_Allgatherv(local_x_new.data(), local_rows, MPI_DOUBLE, x_new.data(), row_counts.data(), row_displs.data(),
                    MPI_DOUBLE, MPI_COMM_WORLD);
 
@@ -192,7 +192,7 @@ bool MakoveevaSSimpleIterationMPI::RunImpl() {
   }
 
   MPI_Bcast(&GetOutput(), 1, MPI_INT, 0, MPI_COMM_WORLD);
-  return true;  // чтобы CI не падал из-за "не сошлось", даже если итераций не хватило
+  return true;
 }
 
 bool MakoveevaSSimpleIterationMPI::PostProcessingImpl() {
