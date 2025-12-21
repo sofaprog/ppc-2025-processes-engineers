@@ -8,7 +8,7 @@
 namespace makoveeva_s_simple_iteration {
 
 class MakoveevaSSimpleIterationPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
-  const int kCount_ = 100;
+  const int kCount_ = 2500;
   InType input_data_{};
 
   void SetUp() override {
