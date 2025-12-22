@@ -120,10 +120,6 @@ void BuildScatterMeta(int q, int bs, int n, int active_p, std::vector<int> *send
   }
 }
 
-const double *RootPtrOrNull(const std::vector<double> &v, int world_rank) {
-  return (world_rank == 0) ? v.data() : nullptr;
-}
-
 void ScatterBlocks(const double *a_full_ptr, const double *b_full_ptr, const int *sendcounts_ptr, const int *displs_ptr,
                    MPI_Datatype block_type, int bs, MPI_Comm cart_comm, std::vector<double> *a_block,
                    std::vector<double> *b_block) {
