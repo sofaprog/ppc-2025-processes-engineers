@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -19,13 +20,15 @@ namespace {
 std::vector<double> GenMatrix(int n, double seed) {
   const auto n_sz = static_cast<std::size_t>(n);
   std::vector<double> m(n_sz * n_sz);
+
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < n; ++j) {
       const auto idx = (static_cast<std::size_t>(i) * n_sz) + static_cast<std::size_t>(j);
-      m[idx] =
-          seed + 0.01 * static_cast<double>(i) - 0.02 * static_cast<double>(j) + 0.001 * static_cast<double>(i * j);
+      m[idx] = seed + (0.01 * static_cast<double>(i)) - (0.02 * static_cast<double>(j)) +
+               (0.001 * static_cast<double>(i * j));
     }
   }
+
   return m;
 }
 
@@ -52,13 +55,15 @@ bool AlmostEqualVec(const std::vector<double> &x, const std::vector<double> &y, 
   if (x.size() != y.size()) {
     return false;
   }
-  for (std::size_t i = 0; i < x.size(); ++i) {
-    const double diff = std::fabs(x[i] - y[i]);
-    const double norm = std::max({1.0, std::fabs(x[i]), std::fabs(y[i])});
+
+  for (std::size_t idx = 0; idx < x.size(); ++idx) {
+    const double diff = std::fabs(x[idx] - y[idx]);
+    const double norm = std::max({1.0, std::fabs(x[idx]), std::fabs(y[idx])});
     if (diff > eps * norm) {
       return false;
     }
   }
+
   return true;
 }
 
@@ -72,11 +77,11 @@ class MakoveevaSCannonAlgorithmFuncTests : public ppc::util::BaseRunFuncTests<In
 
  protected:
   void SetUp() override {
-    const TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
+    const TestType params = std::get<2>(GetParam());
     n_ = std::get<0>(params);
 
-    auto a = GenMatrix(n_, 1.0);
-    auto b = GenMatrix(n_, 2.0);
+    const auto a = GenMatrix(n_, 1.0);
+    const auto b = GenMatrix(n_, 2.0);
 
     input_ = std::make_tuple(a, b, n_);
     ref_ = MultiplyRef(a, b, n_);
@@ -92,8 +97,8 @@ class MakoveevaSCannonAlgorithmFuncTests : public ppc::util::BaseRunFuncTests<In
 
  private:
   int n_ = 0;
-  InType input_{};
-  OutType ref_{};
+  InType input_;
+  OutType ref_;
 };
 
 TEST_P(MakoveevaSCannonAlgorithmFuncTests, CannonMatmul) {
