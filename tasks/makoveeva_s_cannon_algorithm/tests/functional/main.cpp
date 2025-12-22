@@ -54,7 +54,7 @@ bool AlmostEqualVec(const std::vector<double> &x, const std::vector<double> &y, 
   }
   for (std::size_t i = 0; i < x.size(); ++i) {
     const double diff = std::fabs(x[i] - y[i]);
-    const double norm = std::max(1.0, std::max(std::fabs(x[i]), std::fabs(y[i])));
+    const double norm = std::max({1.0, std::fabs(x[i]), std::fabs(y[i])});
     if (diff > eps * norm) {
       return false;
     }

@@ -20,8 +20,8 @@ bool CheckInputLocal(const std::vector<double> &a, const std::vector<double> &b,
     return false;
   }
   const auto n_sz = static_cast<std::size_t>(n);
-  const auto exp = n_sz * n_sz;
-  return (a.size() == exp) && (b.size() == exp);
+  const auto expected = n_sz * n_sz;
+  return (a.size() == expected) && (b.size() == expected);
 }
 
 int ChooseGridQ(int size, int n) {
@@ -74,26 +74,26 @@ MakoveevaSCannonAlgorithmMPI::MakoveevaSCannonAlgorithmMPI(const InType &in) {
 }
 
 bool MakoveevaSCannonAlgorithmMPI::ValidationImpl() {
-  int rank = 0;
-  int size = 0;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  int world_rank = 0;
+  int world_size = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
   int n = 0;
-  if (rank == 0) {
+  if (world_rank == 0) {
     n = std::get<2>(GetInput());
   }
   MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
   int ok_input = 0;
-  if (rank == 0) {
+  if (world_rank == 0) {
     const auto &a = std::get<0>(GetInput());
     const auto &b = std::get<1>(GetInput());
     ok_input = (GetOutput().empty() && CheckInputLocal(a, b, n)) ? 1 : 0;
   }
   MPI_Bcast(&ok_input, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-  const int q = ChooseGridQ(size, n);
+  const int q = ChooseGridQ(world_size, n);
   const int ok_grid = (q > 0) ? 1 : 0;
 
   return (ok_input != 0) && (ok_grid != 0);
@@ -117,7 +117,6 @@ bool MakoveevaSCannonAlgorithmMPI::RunImpl() {
     n = std::get<2>(GetInput());
   }
   MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
   if (n <= 0) {
     return false;
   }
@@ -137,10 +136,12 @@ bool MakoveevaSCannonAlgorithmMPI::RunImpl() {
   std::vector<double> c_full;
 
   if (is_active) {
-    int rank = 0;
-    int size = 0;
-    MPI_Comm_rank(active_comm, &rank);
-    MPI_Comm_size(active_comm, &size);
+    int active_rank = 0;
+    int active_size = 0;
+    MPI_Comm_rank(active_comm, &active_rank);
+    MPI_Comm_size(active_comm, &active_size);
+
+    (void)active_size;
 
     const int bs = n / q;
     const auto bs_sz = static_cast<std::size_t>(bs);
@@ -149,7 +150,7 @@ bool MakoveevaSCannonAlgorithmMPI::RunImpl() {
     const std::array<int, 2> periods = {1, 1};
 
     MPI_Comm cart_comm = MPI_COMM_NULL;
-    MPI_Cart_create(active_comm, 2, dims.data(), periods.data(), 0, &cart_comm);
+    MPI_Cart_create(active_comm, 2, dims.data(), periods.data(), 0 /*reorder*/, &cart_comm);
 
     int cart_rank = 0;
     MPI_Comm_rank(cart_comm, &cart_rank);
@@ -171,10 +172,10 @@ bool MakoveevaSCannonAlgorithmMPI::RunImpl() {
       sendcounts.assign(static_cast<std::size_t>(active_p), 1);
       displs.assign(static_cast<std::size_t>(active_p), 0);
 
-      for (int r = 0; r < q; ++r) {
-        for (int c = 0; c < q; ++c) {
-          const int proc = (r * q) + c;
-          displs[static_cast<std::size_t>(proc)] = ((r * bs) * n) + (c * bs);
+      for (int row_idx = 0; row_idx < q; ++row_idx) {
+        for (int col_idx = 0; col_idx < q; ++col_idx) {
+          const int proc = (row_idx * q) + col_idx;
+          displs[static_cast<std::size_t>(proc)] = ((row_idx * bs) * n) + (col_idx * bs);
         }
       }
     }
@@ -186,11 +187,12 @@ bool MakoveevaSCannonAlgorithmMPI::RunImpl() {
       b_full_ptr = std::get<1>(GetInput()).data();
     }
 
-    MPI_Scatterv(a_full_ptr, cart_rank == 0 ? sendcounts.data() : nullptr, cart_rank == 0 ? displs.data() : nullptr,
-                 block_type, a_block.data(), bs * bs, MPI_DOUBLE, 0, cart_comm);
+    const int *sendcounts_ptr = (cart_rank == 0) ? sendcounts.data() : nullptr;
+    const int *displs_ptr = (cart_rank == 0) ? displs.data() : nullptr;
 
-    MPI_Scatterv(b_full_ptr, cart_rank == 0 ? sendcounts.data() : nullptr, cart_rank == 0 ? displs.data() : nullptr,
-                 block_type, b_block.data(), bs * bs, MPI_DOUBLE, 0, cart_comm);
+    MPI_Scatterv(a_full_ptr, sendcounts_ptr, displs_ptr, block_type, a_block.data(), bs * bs, MPI_DOUBLE, 0, cart_comm);
+
+    MPI_Scatterv(b_full_ptr, sendcounts_ptr, displs_ptr, block_type, b_block.data(), bs * bs, MPI_DOUBLE, 0, cart_comm);
 
     int src = 0;
     int dst = 0;
@@ -213,13 +215,13 @@ bool MakoveevaSCannonAlgorithmMPI::RunImpl() {
       }
     }
 
+    double *c_recv_ptr = nullptr;
     if (cart_rank == 0) {
       c_full.assign(static_cast<std::size_t>(n) * static_cast<std::size_t>(n), 0.0);
+      c_recv_ptr = c_full.data();
     }
 
-    MPI_Gatherv(c_block.data(), bs * bs, MPI_DOUBLE, cart_rank == 0 ? c_full.data() : nullptr,
-                cart_rank == 0 ? sendcounts.data() : nullptr, cart_rank == 0 ? displs.data() : nullptr, block_type, 0,
-                cart_comm);
+    MPI_Gatherv(c_block.data(), bs * bs, MPI_DOUBLE, c_recv_ptr, sendcounts_ptr, displs_ptr, block_type, 0, cart_comm);
 
     MPI_Type_free(&block_type);
     MPI_Comm_free(&cart_comm);
@@ -244,11 +246,11 @@ bool MakoveevaSCannonAlgorithmMPI::RunImpl() {
 }
 
 bool MakoveevaSCannonAlgorithmMPI::PostProcessingImpl() {
-  int rank = 0;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  int world_rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
   int n = 0;
-  if (rank == 0) {
+  if (world_rank == 0) {
     n = std::get<2>(GetInput());
   }
   MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);

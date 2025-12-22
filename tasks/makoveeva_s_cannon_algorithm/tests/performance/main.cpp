@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "makoveeva_s_cannon_algorithm/common/include/common.hpp"
@@ -20,7 +21,7 @@ std::vector<double> GenMatrix(int n, double seed) {
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < n; ++j) {
       const auto idx = (static_cast<std::size_t>(i) * n_sz) + static_cast<std::size_t>(j);
-      m[idx] = seed + 0.01 * static_cast<double>(i) - 0.02 * static_cast<double>(j);
+      m[idx] = seed + (0.01 * static_cast<double>(i)) - (0.02 * static_cast<double>(j));
     }
   }
   return m;
@@ -30,7 +31,7 @@ std::vector<double> GenMatrix(int n, double seed) {
 
 class MakoveevaSCannonAlgorithmPerfTests : public ppc::util::BaseRunPerfTests<InType, OutType> {
   static constexpr int kN = 729;
-  InType input_data_{};
+  InType input_data_;
 
   void SetUp() override {
     auto a = GenMatrix(kN, 1.0);
