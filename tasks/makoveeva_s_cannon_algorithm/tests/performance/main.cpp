@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-
 #include <mpi.h>
 
 #include <cstddef>
@@ -39,7 +38,7 @@ class MakoveevaSCannonAlgorithmPerfTests : public ppc::util::BaseRunPerfTests<In
     input_data_ = std::make_tuple(std::move(a), std::move(b), kN);
   }
 
-  bool CheckTestOutputData(OutType& output_data) final {
+  bool CheckTestOutputData(OutType &output_data) final {
     int rank = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 

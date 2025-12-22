@@ -10,7 +10,7 @@ namespace makoveeva_s_cannon_algorithm {
 
 namespace {
 
-bool CheckMatrixSizes(const std::vector<double>& a, const std::vector<double>& b, int n) {
+bool CheckMatrixSizes(const std::vector<double> &a, const std::vector<double> &b, int n) {
   if (n <= 0) {
     return false;
   }
@@ -19,7 +19,7 @@ bool CheckMatrixSizes(const std::vector<double>& a, const std::vector<double>& b
   return (a.size() == expected) && (b.size() == expected);
 }
 
-void MultiplyDense(const std::vector<double>& a, const std::vector<double>& b, int n, std::vector<double>* c) {
+void MultiplyDense(const std::vector<double> &a, const std::vector<double> &b, int n, std::vector<double> *c) {
   const auto n_sz = static_cast<std::size_t>(n);
   c->assign(n_sz * n_sz, 0.0);
 
@@ -38,16 +38,16 @@ void MultiplyDense(const std::vector<double>& a, const std::vector<double>& b, i
 
 }  // namespace
 
-MakoveevaSCannonAlgorithmSEQ::MakoveevaSCannonAlgorithmSEQ(const InType& in) {
+MakoveevaSCannonAlgorithmSEQ::MakoveevaSCannonAlgorithmSEQ(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
   GetOutput() = std::vector<double>{};
 }
 
 bool MakoveevaSCannonAlgorithmSEQ::ValidationImpl() {
-  const auto& input = GetInput();
-  const auto& a = std::get<0>(input);
-  const auto& b = std::get<1>(input);
+  const auto &input = GetInput();
+  const auto &a = std::get<0>(input);
+  const auto &b = std::get<1>(input);
   const int n = std::get<2>(input);
 
   if (!GetOutput().empty()) {
@@ -67,9 +67,9 @@ bool MakoveevaSCannonAlgorithmSEQ::PreProcessingImpl() {
 }
 
 bool MakoveevaSCannonAlgorithmSEQ::RunImpl() {
-  const auto& input = GetInput();
-  const auto& a = std::get<0>(input);
-  const auto& b = std::get<1>(input);
+  const auto &input = GetInput();
+  const auto &a = std::get<0>(input);
+  const auto &b = std::get<1>(input);
   const int n = std::get<2>(input);
 
   if (!CheckMatrixSizes(a, b, n)) {

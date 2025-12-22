@@ -11,7 +11,7 @@ class MakoveevaSCannonAlgorithmMPI : public BaseTask {
     return ppc::task::TypeOfTask::kMPI;
   }
 
-  explicit MakoveevaSCannonAlgorithmMPI(const InType& in);
+  explicit MakoveevaSCannonAlgorithmMPI(const InType &in);
 
  private:
   bool ValidationImpl() override;
