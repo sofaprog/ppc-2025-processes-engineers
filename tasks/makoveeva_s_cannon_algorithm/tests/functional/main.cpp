@@ -106,10 +106,9 @@ TEST_P(MakoveevaSCannonAlgorithmFuncTests, CannonMatmul) {
 }
 
 const std::array<TestType, 9> kTestParam = {
-    std::make_tuple(1, "n1"), std::make_tuple(2, "n2"),   std::make_tuple(4, "n4"),
-    std::make_tuple(8, "n8"), std::make_tuple(16, "n16"),std::make_tuple(20, "n20"),std::make_tuple(32, "n32"),
-    std::make_tuple(3, "n3"),std::make_tuple(7, "n7")
-};
+    std::make_tuple(1, "n1"),   std::make_tuple(2, "n2"),   std::make_tuple(4, "n4"),
+    std::make_tuple(8, "n8"),   std::make_tuple(16, "n16"), std::make_tuple(20, "n20"),
+    std::make_tuple(32, "n32"), std::make_tuple(3, "n3"),   std::make_tuple(7, "n7")};
 
 const auto kTestTasksList = std::tuple_cat(
     ppc::util::AddFuncTask<MakoveevaSCannonAlgorithmMPI, InType>(kTestParam, PPC_SETTINGS_makoveeva_s_cannon_algorithm),
