@@ -51,13 +51,15 @@ bool MakoveevaSCannonAlgorithmSEQ::ValidationImpl() {
   const auto &b = std::get<1>(input);
   const int n = std::get<2>(input);
 
-  if (!GetOutput().empty()) {
-    return false;
-  }
+  // ВАЖНО: не проверяем GetOutput().empty() —
+  // perf/pipeline может переиспользовать объект задачи много раз.
   return CheckMatrixSizes(a, b, n);
 }
 
 bool MakoveevaSCannonAlgorithmSEQ::PreProcessingImpl() {
+  // безопасно очистить перед новым запуском
+  GetOutput().clear();
+
   const int n = std::get<2>(GetInput());
   if (n <= 0) {
     return false;
